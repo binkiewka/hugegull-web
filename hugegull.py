@@ -64,8 +64,8 @@ def concatenate_clips(clip_files, output_file):
         return
 
     list_file = os.path.join("temp", "concat_list.txt")
-    with open(list_file, "w") as f:
 
+    with open(list_file, "w") as f:
         for clip in clip_files:
             # Paths in the concat file are relative to the concat file's location
             clip_basename = os.path.basename(clip)
