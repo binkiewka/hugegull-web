@@ -26,6 +26,7 @@ clip_duration = 6
 num_clips = 10
 path = "/home/memphis/toilet"
 fps = 30
+crf = 30
 ```
 
 ## Usage

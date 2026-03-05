@@ -18,6 +18,7 @@
 # num_clips = 10
 # path = "/home/memphis/toilet"
 # fps = 30
+# crf = 30
 
 # Usage:
 
@@ -57,6 +58,7 @@ CLIP_DURATION = 6
 NUM_CLIPS = 10
 PATH = os.path.dirname(os.path.abspath(__file__))
 FPS = 30
+CRF = 30
 
 # Read configuration from TOML
 with open(CONFIG_PATH, "rb") as f:
@@ -70,6 +72,9 @@ if "num_clips" in config_data:
 
 if "fps" in config_data:
     FPS = int(config_data["fps"])
+
+if "crf" in config_data:
+    CRF = int(config_data["crf"])
 
 if "path" in config_data:
     PATH = config_data["path"]
@@ -146,9 +151,12 @@ def generate_random_clips(url, total_duration):
             url,
             "-t",
             str(CLIP_DURATION),
-            "-r", str(FPS),
+            "-r",
+            str(FPS),
             "-c:v",
             "libx264",
+            "-crf",
+            str(CRF),
             "-c:a",
             "aac",
             "-y",
