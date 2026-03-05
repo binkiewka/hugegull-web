@@ -28,24 +28,24 @@ if not os.path.exists(CONFIG_PATH):
 # Default configuration values
 CLIP_DURATION = 6
 NUM_CLIPS = 10
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 # Read configuration from TOML
 with open(CONFIG_PATH, "rb") as f:
     config_data = tomllib.load(f)
 
-if "duration" in config_data:
-    CLIP_DURATION = int(config_data["duration"])
+if "clip_duration" in config_data:
+    CLIP_DURATION = int(config_data["clip_duration"])
 
 if "num_clips" in config_data:
     NUM_CLIPS = int(config_data["num_clips"])
 
-if "directory" in config_data:
-    SCRIPT_DIR = config_data["directory"]
+if "path" in config_data:
+    PATH = config_data["path"]
 
-# Resolve output and temp directories based on SCRIPT_DIR
-TEMP_DIR = os.path.join(SCRIPT_DIR, "temp")
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
+# Resolve output and temp directories based on PATH
+TEMP_DIR = os.path.join(PATH, "temp")
+OUTPUT_DIR = os.path.join(PATH, "output")
 
 def get_random_name():
     dict_path = "/usr/share/dict/words"
