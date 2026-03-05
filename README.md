@@ -22,9 +22,9 @@ Edit ~/.config/hugegull/hugegull.conf
 It is empty but you can make it look like this:
 
 ```
-clip_duration = 6
-num_clips = 8
 path = "/home/memphis/toilet"
+duration = 45
+num_clips = 8
 fps = 30
 crf = 30
 ```
