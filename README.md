@@ -12,10 +12,13 @@ The output name can be ommitted to use a random name.
 ## Installation
 
 git clone this somewhere.
-Make a shell alias to python /path/to/hugegull/hugegull.py
-alias hgg="python ~/code/hugegull/hugegull.py"
+
+Make a shell alias:
+
+```alias hgg="python ~/code/hugegull/hugegull.py"```
 
 Edit ~/.config/hugegull/hugegull.conf
+
 It is empty but you can make it look like this:
 
 ```
