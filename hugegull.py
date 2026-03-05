@@ -151,7 +151,7 @@ def generate_clip_sections(target_duration, total_stream_duration):
     while current_sum < target_duration:
         clip_length = random.uniform(1.5, 8.0)
 
-        if ((current_sum + clip_length) > target_duration):
+        if (current_sum + clip_length) > target_duration:
             clip_length = target_duration - current_sum
 
             # Strictly enforce a minimum 1.5s clip to prevent empty files
