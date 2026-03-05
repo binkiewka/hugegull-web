@@ -9,6 +9,7 @@
 
 # git clone this somewhere.
 # Make a shell alias to python /path/to/hugegull/hugegull.py
+# alias hgg="python ~/code/hugegull/hugegull.py"
 
 # Edit ~/.config/hugegull/hugegull.conf
 # It is empty but you can make it look like this:
@@ -16,6 +17,15 @@
 # clip_duration = 6
 # num_clips = 10
 # path = "/home/memphis/toilet"
+
+# Usage:
+
+# export HUGE_URL="https://something.m3u8"
+# hgg
+
+# Or:
+
+# hgg "https://something.m3u8"
 
 import subprocess
 import random
