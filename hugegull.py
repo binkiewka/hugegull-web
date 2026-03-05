@@ -1,5 +1,9 @@
-# Note: You can use the HUGE_URL envar optionally
-# instead of sending a url in the command.
+# HUGEGULL
+# video maker
+
+# Notes:
+# You can use the HUGE_URL env var.
+# The output name can be ommitted to use a random name.
 
 import subprocess
 import random
@@ -172,7 +176,7 @@ def main():
         base_name = get_random_name()
 
     if not stream_url:
-        print("Usage: python script.py [<m3u8_url>] [<output_name_without_ext>]")
+        print("Usage: python script.py [<m3u8_url>] [<output_name>]")
         print("Or set HUGE_URL environment variable.")
         sys.exit(1)
 
