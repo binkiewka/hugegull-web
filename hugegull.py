@@ -287,6 +287,17 @@ def main():
     print(f"Stream duration: {total_duration} seconds.")
     clips = generate_random_clips(stream_url, total_duration)
     concatenate_clips(clips, output_file)
+    notify_done()
+
+
+def notify_done():
+    title = "🤯 hugegull"
+    message = "Video Complete"
+
+    try:
+        subprocess.run(["notify-send", title, message], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error sending notification: {e}")
 
 
 if __name__ == "__main__":
