@@ -1,20 +1,18 @@
 # Note: You can use the HUGE_URL envar optionally
 # instead of sending a url in the command.
 
-# The config file resides in ~/.config/hugegull/config.toml
-# It is empty but you can make it look like this:
-
-# clip_duration = 6
-# num_clips = 10
-# path = "/home/memphis/toilet"
-
 import subprocess
 import random
 import os
 import json
 import sys
 import time
-import tomllib
+import re
+
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 # Configuration path setup
 CONFIG_PATH = os.path.expanduser("~/.config/hugegull/config.toml")
@@ -36,18 +34,39 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 with open(CONFIG_PATH, "rb") as f:
     config_data = tomllib.load(f)
 
-if "clip_duration" in config_data:
-    CLIP_DURATION = int(config_data["clip_duration"])
+if "duration" in config_data:
+    CLIP_DURATION = int(config_data["duration"])
 
 if "num_clips" in config_data:
     NUM_CLIPS = int(config_data["num_clips"])
 
-if "path" in config_data:
-    SCRIPT_DIR = config_data["path"]
+if "directory" in config_data:
+    SCRIPT_DIR = config_data["directory"]
 
 # Resolve output and temp directories based on SCRIPT_DIR
 TEMP_DIR = os.path.join(SCRIPT_DIR, "temp")
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
+
+def get_random_name():
+    dict_path = "/usr/share/dict/words"
+
+    if os.path.exists(dict_path):
+        with open(dict_path, "r") as f:
+            words = f.readlines()
+
+        valid_words = []
+
+        for w in words:
+            clean_w = w.strip().lower().replace("'", "")
+
+            if re.match(r"^[a-z]+$", clean_w):
+                valid_words.append(clean_w)
+
+        if len(valid_words) >= 2:
+            selected = random.sample(valid_words, 2)
+            return f"{selected[0]}_{selected[1]}"
+
+    return str(int(time.time()))
 
 def get_stream_duration(url):
     command = [
@@ -144,16 +163,16 @@ def main():
 
         if arg.startswith("http"):
             stream_url = arg
-            base_name = str(int(time.time()))
+            base_name = get_random_name()
         else:
             stream_url = os.environ.get("HUGE_URL")
             base_name = arg
     else:
         stream_url = os.environ.get("HUGE_URL")
-        base_name = str(int(time.time()))
+        base_name = get_random_name()
 
     if not stream_url:
-        print("Usage: python hugegull.py [<m3u8_url>] [<output_name>]")
+        print("Usage: python script.py [<m3u8_url>] [<output_name_without_ext>]")
         print("Or set HUGE_URL environment variable.")
         sys.exit(1)
 
