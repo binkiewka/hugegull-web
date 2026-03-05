@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-ruff format && ruff check &&
+ruff format && ruff check

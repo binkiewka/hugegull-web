@@ -51,6 +51,7 @@ if "path" in config_data:
 TEMP_DIR = os.path.join(PATH, "temp")
 OUTPUT_DIR = os.path.join(PATH, "output")
 
+
 def get_random_name():
     dict_path = "/usr/share/dict/words"
 
@@ -72,11 +73,14 @@ def get_random_name():
 
     return str(int(time.time()))
 
+
 def get_stream_duration(url):
     command = [
         "ffprobe",
-        "-v", "quiet",
-        "-print_format", "json",
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
         "-show_format",
         url,
     ]
@@ -94,6 +98,7 @@ def get_stream_duration(url):
 
     return 0.0
 
+
 def generate_random_clips(url, total_duration, num_clips, clip_duration):
     clip_files = []
     max_start = total_duration - clip_duration
@@ -108,11 +113,16 @@ def generate_random_clips(url, total_duration, num_clips, clip_duration):
 
         command = [
             "ffmpeg",
-            "-ss", str(start_time),
-            "-i", url,
-            "-t", str(clip_duration),
-            "-c:v", "libx264",
-            "-c:a", "aac",
+            "-ss",
+            str(start_time),
+            "-i",
+            url,
+            "-t",
+            str(clip_duration),
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
             "-y",
             output_name,
         ]
@@ -122,6 +132,7 @@ def generate_random_clips(url, total_duration, num_clips, clip_duration):
         clip_files.append(output_name)
 
     return clip_files
+
 
 def concatenate_clips(clip_files, output_file):
     if not clip_files:
@@ -137,10 +148,14 @@ def concatenate_clips(clip_files, output_file):
 
     command = [
         "ffmpeg",
-        "-f", "concat",
-        "-safe", "0",
-        "-i", list_file,
-        "-c", "copy",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        list_file,
+        "-c",
+        "copy",
         "-y",
         output_file,
     ]
@@ -154,6 +169,7 @@ def concatenate_clips(clip_files, output_file):
 
     os.remove(list_file)
     print(f"Video saved as {output_file}")
+
 
 def main():
     stream_url = None
@@ -200,6 +216,7 @@ def main():
     print(f"Stream duration: {total_duration} seconds.")
     clips = generate_random_clips(stream_url, total_duration, NUM_CLIPS, CLIP_DURATION)
     concatenate_clips(clips, output_file)
+
 
 if __name__ == "__main__":
     main()
