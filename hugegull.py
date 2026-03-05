@@ -1,11 +1,22 @@
+# Note: You can use the HUGE_URL envar optionally
+# instead of sending a url in the command.
+
 import subprocess
 import random
 import os
 import json
 import sys
+import time
 
+# Editable: Clip config
 CLIP_DURATION = 6
 NUM_CLIPS = 10
+
+# Editable: Point to a dir
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+TEMP_DIR = os.path.join(SCRIPT_DIR, "temp")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
 
 def get_stream_duration(url):
     command = [
@@ -39,7 +50,7 @@ def generate_random_clips(url, total_duration, num_clips, clip_duration):
 
     for i in range(num_clips):
         start_time = random.uniform(0, max_start)
-        output_name = os.path.join("temp", f"temp_clip_{i}.mp4")
+        output_name = os.path.join(TEMP_DIR, f"temp_clip_{i}.mp4")
 
         command = [
             "ffmpeg",
@@ -63,11 +74,10 @@ def concatenate_clips(clip_files, output_file):
         print("No clips to concatenate.")
         return
 
-    list_file = os.path.join("temp", "concat_list.txt")
+    list_file = os.path.join(TEMP_DIR, "concat_list.txt")
 
     with open(list_file, "w") as f:
         for clip in clip_files:
-            # Paths in the concat file are relative to the concat file's location
             clip_basename = os.path.basename(clip)
             f.write(f"file '{clip_basename}'\n")
 
@@ -91,21 +101,42 @@ def concatenate_clips(clip_files, output_file):
     os.remove(list_file)
     print(f"Video saved as {output_file}")
 
+def is_url(s):
+    return s.startswith(("http", "https"))
+
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: python script.py <m3u8_url> <output_name_without_ext>")
+    stream_url = None
+    base_name = None
+
+    if len(sys.argv) >= 3:
+        stream_url = sys.argv[1]
+        base_name = sys.argv[2]
+    elif len(sys.argv) == 2:
+        arg = sys.argv[1]
+
+        if is_url(arg):
+            stream_url = arg
+            base_name = str(int(time.time()))
+        else:
+            stream_url = os.environ.get("HUGE_URL")
+            base_name = arg
+    else:
+        stream_url = os.environ.get("HUGE_URL")
+        base_name = str(int(time.time()))
+
+    if not stream_url:
+        print("Usage: python script.py [<m3u8_url>] [<output_name_without_ext>]")
+        print("Or set HUGE_URL environment variable.")
         sys.exit(1)
 
-    os.makedirs("temp", exist_ok=True)
-    os.makedirs("output", exist_ok=True)
+    os.makedirs(TEMP_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    stream_url = sys.argv[1]
-    base_name = sys.argv[2]
-    output_file = os.path.join("output", f"{base_name}.mp4")
+    output_file = os.path.join(OUTPUT_DIR, f"{base_name}.mp4")
     counter = 1
 
     while os.path.exists(output_file):
-        output_file = os.path.join("output", f"{base_name} ({counter}).mp4")
+        output_file = os.path.join(OUTPUT_DIR, f"{base_name}_{counter}.mp4")
         counter += 1
 
     print("Fetching stream duration...")
