@@ -15,28 +15,6 @@ from utils import utils
 from engine import engine
 
 
-def get_info() -> tuple[str, str]:
-    name = ""
-    version = ""
-
-    try:
-        with open("setup.py", "r") as f:
-            content = f.read()
-            match = re.search(r'name="([^"]+)"', content)
-
-            if match:
-                name = match.group(1)
-
-            match = re.search(r'version="([^"]+)"', content)
-
-            if match:
-                version = match.group(1)
-    except FileNotFoundError:
-        pass
-
-    return name, version
-
-
 def show_usage() -> None:
     utils.print("Usage: python /path/to/main.py <url> <name>")
     utils.print("Or set HUGE_URL and HUGE_NAME env vars.")
@@ -47,8 +25,8 @@ def main() -> None:
     args = sys.argv[1:]
 
     if "--help" in args or "--version" in args:
-        name, version = get_info()
-        utils.print(f"{name} v{version}")
+        msg = f"{config.info_name} v{config.info_version}"
+        utils.print(msg)
         show_usage()
         sys.exit(0)
 

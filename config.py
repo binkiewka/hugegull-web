@@ -23,6 +23,8 @@ class Config:
         self.avg_clip_duration = 6.0
         self.max_clip_duration = 9.0
         self.path = os.path.dirname(os.path.abspath(__file__))
+        self.info_name = "hugegull"
+        self.info_version = "0.0.0"
 
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
@@ -30,6 +32,7 @@ class Config:
         self.read_args()
         self.make_dirs()
         self.read_file()
+        self.read_info()
 
         self.temp_dir = os.path.join(self.path, "temp")
         self.output_dir = os.path.join(self.path, "output")
@@ -79,6 +82,16 @@ class Config:
 
         if "path" in config_data:
             self.path = config_data["path"]
+
+    def read_info(self) -> None:
+        with open("info.toml", "rb") as f:
+            info = tomllib.load(f)
+
+        if "name" in info:
+            self.info_name = info["name"]
+
+        if "version" in info:
+            self.info_version = info["version"]
 
 
 config = Config()
