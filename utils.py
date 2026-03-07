@@ -3,6 +3,7 @@ import re
 import time
 import random
 import subprocess
+from pathlib import Path
 
 
 class Utils:
@@ -85,5 +86,13 @@ class Utils:
         except subprocess.CalledProcessError as e:
             utils.print(f"Error sending notification: {e}")
 
+    def shorten_path(file_path):
+        path = Path(file_path).resolve()
+        home = Path.home()
+
+        if path.is_relative_to(home):
+            return Path("~") / path.relative_to(home)
+
+        return path
 
 utils = Utils()
