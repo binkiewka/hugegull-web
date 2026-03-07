@@ -108,7 +108,10 @@ def resolve_with_ytdlp(url):
                 a_url = metadata["requested_formats"][1]["url"]
                 return {"video": v_url, "audio": a_url}, duration
             else:
-                return {"video": metadata["requested_formats"][0]["url"], "audio": None}, duration
+                return {
+                    "video": metadata["requested_formats"][0]["url"],
+                    "audio": None,
+                }, duration
         else:
             return {"video": metadata.get("url"), "audio": None}, duration
 
