@@ -13,15 +13,9 @@ The output name can be ommitted to use a random name.
 
 git clone this somewhere.
 
-Install prompt_toolkit:
-
-```sudo pacman -S python-prompt_toolkit```
-
-Or use pip.
-
 Make a shell alias:
 
-```alias hgg="python ~/code/hugegull/main.py"```
+```alias hgg="python ~/code/hugegull/hugegull.py"```
 
 Edit ~/.config/hugegull/hugegull.conf
 
