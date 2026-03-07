@@ -13,7 +13,8 @@ from utils import utils
 
 class Engine:
     def __init__(self) -> None:
-        self.url: dict[str, Any] | str = config.url
+        self.url = config.url
+        self.data: dict[str, Any] = {}
         self.clips: list[str] = []
         self.duration = 0.0
         self.prepare()
@@ -32,7 +33,7 @@ class Engine:
     def start(self) -> None:
         utils.info("Starting...")
 
-        if utils.is_site(str(self.url)):
+        if utils.is_site(self.url):
             self.resolve_with_ytdlp()
         else:
             self.get_stream_duration()
@@ -51,7 +52,7 @@ class Engine:
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
-            str(self.url),
+            self.url,
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
@@ -71,19 +72,19 @@ class Engine:
 
             if "requested_formats" in metadata:
                 if len(metadata["requested_formats"]) >= 2:
-                    v_url = metadata["requested_formats"][0]["url"]
+                    v_data = metadata["requested_formats"][0]["url"]
                     a_url = metadata["requested_formats"][1]["url"]
-                    self.url = {"video": v_url, "audio": a_url}
+                    self.data = {"video": v_data, "audio": a_url}
                     self.duration = duration
                 else:
-                    self.url = {
+                    self.data = {
                         "video": metadata["requested_formats"][0]["url"],
                         "audio": None,
                     }
 
                     self.duration = duration
             else:
-                self.url = {"video": metadata.get("url"), "audio": None}
+                self.data = {"video": metadata.get("url"), "audio": None}
                 self.duration = duration
 
         except Exception as e:
@@ -91,7 +92,7 @@ class Engine:
 
     def generate_clip_sections(self) -> list[dict[str, Any]]:
         duration = config.duration
-        sections: dict[str, Any] = []
+        sections: list[dict[str, Any]] = []
         current_sum = 0.0
 
         end_buffer = 2.0
@@ -126,24 +127,24 @@ class Engine:
         total_sections = len(sections)
         is_split_stream = False
 
-        if isinstance(self.url, dict):
-            if self.url.get("audio") is not None:
+        if isinstance(self.data):
+            if self.data.get("audio") is not None:
                 is_split_stream = True
 
-        v_url = self.url
+        v_data = self.data
 
-        if isinstance(self.url, dict):
-            v_url = self.url["video"]
+        if self.data:
+            v_data = self.data["video"]
 
         for i in range(total_sections):
             section = sections[i]
             start = section["start"]
             duration = section["duration"]
             name = os.path.join(config.project_dir, f"temp_clip_{i + 1}.mp4")
-            command = ["ffmpeg", "-ss", str(start), "-i", v_url]
+            command = ["ffmpeg", "-ss", str(start), "-i", v_data]
 
             if is_split_stream:
-                command.extend(["-ss", str(start), "-i", self.url["audio"]])
+                command.extend(["-ss", str(start), "-i", self.data["audio"]])
 
             command.extend(
                 [
@@ -222,7 +223,7 @@ class Engine:
             "-print_format",
             "json",
             "-show_format",
-            self.url,
+            self.data,
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
