@@ -203,7 +203,7 @@ class Engine:
 
     def run_pipeline(self, stream_url):
         self.abort_event.clear()
-        base_name = get_random_name()
+        base_name = self.get_random_name()
         run_id = str(int(time.time() * 1000))
         run_temp_dir = os.path.join(TEMP_DIR, f"project_{run_id}")
 
@@ -243,7 +243,7 @@ class Engine:
 
         clips = self.generate_random_clips(stream_url, total_duration, run_temp_dir)
         self.concatenate_clips(clips, output_file, run_temp_dir)
-        notify_done()
+        self.notify_done()
 
     def requires_ytdlp(self, s):
         if utils.is_url(s):
@@ -321,5 +321,14 @@ class Engine:
 
     def start(self):
         threading.Thread(target=self.run_pipeline, args=(url,), daemon=True).start()
+
+    def notify_done():
+        title = "🤯 hugegull"
+        message = "Video Complete"
+
+        try:
+            subprocess.run(["notify-send", title, message], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Error sending notification: {e}", "class:error")
 
     engine = Engine()

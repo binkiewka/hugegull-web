@@ -17,7 +17,7 @@ from Engine import engine
 class App:
     def __init__(self):
         self.url_input = TextArea(
-            text=DEFAULT_URL,
+            text=config.default_url,
             prompt=" URL: ",
             multiline=False,
             accept_handler=self.accept_url,
@@ -106,7 +106,7 @@ class App:
         get_app().invalidate()
 
     def paste_clicked(self):
-        clip_text = get_clipboard_text()
+        clip_text = self.get_clipboard_text()
 
         if utils.is_url(clip_text):
             self.url_input.text = clip_text

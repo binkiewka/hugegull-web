@@ -30,15 +30,6 @@ class Utils:
 
         return ""
 
-    def notify_done():
-        title = "🤯 hugegull"
-        message = "Video Complete"
-
-        try:
-            subprocess.run(["notify-send", title, message], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"Error sending notification: {e}", "class:error")
-
     def get_random_name():
         dict_path = "/usr/share/dict/words"
 

@@ -1,5 +1,5 @@
 def main():
-    app = App(config)
+    app = App()
     app.run()
 
 
