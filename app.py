@@ -81,7 +81,7 @@ class App:
             full_screen=True,
         )
 
-        log.add("Ready. Paste a URL and press Enter or click Start.", "class:info")
+        self.log("Ready. Paste a URL and press Enter or click Start.", "class:info")
 
     def start_clicked(self):
         from engine import engine
@@ -89,20 +89,15 @@ class App:
         url = self.url_input.text.strip()
 
         if not url:
-            log.add("Please enter a URL first.", "class:error")
+            self.log("Please enter a URL first.", "class:error")
             return
 
-        log.add(f"Starting job for: {url}", "class:success")
+        self.log(f"Starting job for: {url}", "class:success")
         engine.start(url)
 
     def abort_clicked(self):
-        if not abort_event.is_set():
-            log.add("Aborting process...", "class:warning")
-            abort_event.set()
-
-            with process_lock:
-                if active_process is not None:
-                    active_process.terminate()
+        self.log("Aborting process...", "class:warning")
+        engine.abort()
 
     def clear_clicked(self):
         self.log_lines.clear()
@@ -115,7 +110,7 @@ class App:
             self.url_input.text = clip_text
             self.start_clicked()
         else:
-            log.add("Clipboard does not contain a valid URL.", "class:error")
+            self.log("Clipboard does not contain a valid URL.", "class:error")
 
     def exit_clicked(self):
         self.abort_clicked()

@@ -332,5 +332,13 @@ class Engine:
         except subprocess.CalledProcessError as e:
             print(f"Error sending notification: {e}", "class:error")
 
+    def abort():
+        if not self.abort_event.is_set():
+            self.abort_event.set()
+
+            with process_lock:
+                if self.active_process is not None:
+                    self.active_process.terminate()
+
 
 engine = Engine()
