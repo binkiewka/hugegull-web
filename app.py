@@ -14,6 +14,7 @@ from utils import utils
 
 class App:
     def __init__(self):
+        self.version = "1.0"
         self.log_lines = []
         self.max_lines = 200
 
@@ -49,7 +50,7 @@ class App:
         self.root_container = HSplit(
             [
                 Frame(
-                    HSplit([self.url_input, self.button_container]), title="HugeGull"
+                    HSplit([self.url_input, self.button_container]), title=f"HugeGull v{self.version}"
                 ),
                 Frame(self.output_window),
             ]
