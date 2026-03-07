@@ -71,4 +71,5 @@ class Utils:
     def info(self, text):
         print(text, "cyan")
 
+
 utils = Utils()
