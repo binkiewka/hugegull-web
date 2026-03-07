@@ -42,6 +42,8 @@ crf = 30
 
 `hgg https://something.m3u8`
 
+YouTube and Twitch video urls work as well.
+
 Or:
 
 ```
