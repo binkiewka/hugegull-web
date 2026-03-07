@@ -2,6 +2,7 @@ import os
 import re
 import time
 import random
+import subprocess
 
 
 class Utils:
@@ -70,9 +71,6 @@ class Utils:
 
     def info(self, text):
         self.print(text, "cyan")
-
-    def done(self, text):
-        self.print(text, "green")
 
     def get_env(self, what):
         return os.environ.get(what, "")

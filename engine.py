@@ -209,7 +209,7 @@ class Engine:
             utils.error(result.stderr)
         else:
             shutil.rmtree(config.project_dir, ignore_errors=True)
-            utils.done(f"Saved as {self.file}")
+            utils.info(f"Saved as {self.file}")
 
     def get_stream_duration(self):
         command = [
