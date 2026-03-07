@@ -2,7 +2,7 @@
 
 This gets random sections from a stream video.
 
-Each section is of variable length.
+Each section is of variable duration.
 
 Then it joins them into a single video.
 
