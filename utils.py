@@ -77,5 +77,13 @@ class Utils:
     def get_env(self, what):
         return os.environ.get(what, "")
 
+    def notify(self, message):
+        title = "🤯 HugeGull"
+
+        try:
+            subprocess.run(["notify-send", title, message], check=True)
+        except subprocess.CalledProcessError as e:
+            utils.print(f"Error sending notification: {e}")
+
 
 utils = Utils()

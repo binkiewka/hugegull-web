@@ -8,21 +8,12 @@ from engine import engine
 
 def main():
     if not config.url:
-        utils.print("Usage: python main.py [<m3u8_url>] [<output_name>]")
-        utils.print("Or set HUGE_URL environment variable.")
+        utils.print("Usage: python main.py [<url>] [<name>]")
+        utils.print("Or set HUGE_URL and HUGE_NAME env vars.")
         sys.exit(1)
 
     engine.start()
-    notify("Video Complete")
-
-
-def notify(message):
-    title = "🤯 HugeGull"
-
-    try:
-        subprocess.run(["notify-send", title, message], check=True)
-    except subprocess.CalledProcessError as e:
-        utils.print(f"Error sending notification: {e}")
+    utils.notify("Video Complete")
 
 
 if __name__ == "__main__":
