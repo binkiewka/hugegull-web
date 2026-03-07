@@ -93,7 +93,7 @@ class App:
             return
 
         log.add(f"Starting job for: {url}", "class:success")
-        engine.start()
+        engine.start(url)
 
     def abort_clicked(self):
         if not abort_event.is_set():

@@ -142,7 +142,7 @@ class Engine:
                 "class:warning",
             )
 
-            result = run_cancellable_command(command)
+            result = self.run_cancellable_command(command)
 
             if self.abort_event.is_set():
                 break
@@ -188,7 +188,7 @@ class Engine:
         ]
 
         app.log("Concatenating clips...", "class:info")
-        result = run_cancellable_command(command)
+        result = self.run_cancellable_command(command)
 
         if self.abort_event.is_set():
             app.log("Concatenation aborted.", "class:error")
@@ -264,7 +264,7 @@ class Engine:
             url,
         ]
 
-        result = run_cancellable_command(command)
+        result = self.run_cancellable_command(command)
 
         if self.abort_event.is_set():
             return url, 0.0
@@ -320,10 +320,10 @@ class Engine:
 
         return CommandResult(returncode, stdout, stderr)
 
-    def start(self):
+    def start(self, url):
         threading.Thread(target=self.run_pipeline, args=(url,), daemon=True).start()
 
-    def notify_done():
+    def notify_done(self):
         title = "🤯 hugegull"
         message = "Video Complete"
 
