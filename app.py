@@ -33,7 +33,7 @@ class App:
         self.output_window = Window(
             content=FormattedTextControl(
                 self.get_log_text,
-                get_cursor_position=lambda: Point(0, self.log_cursor_row)
+                get_cursor_position=lambda: Point(0, self.log_cursor_row),
             ),
             right_margins=[ScrollbarMargin(display_arrows=True)],
             always_hide_cursor=True,
