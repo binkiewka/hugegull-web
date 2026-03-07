@@ -44,11 +44,13 @@ class Utils:
         return s.startswith(("http", "https"))
 
     def is_site(self, s):
-        if self.is_url(s):
-            if ("youtube.com" in s) or ("youtu.be") in s or ("twitch.tv" in s):
-                return True
+        domains = [
+            "youtu.be",
+            "youtube.com",
+            "twitch.tv",
+        ]
 
-        return False
+        return self.is_url(s) and any(d in s for d in domains)
 
     def print(self, text, color=""):
         if color:
