@@ -9,7 +9,7 @@ for file_name in glob.glob("*.py"):
 
 setup(
     name="hugegull",
-    version="1.0.0",
+    version="1.1.0",
     py_modules=modules,
     entry_points={
         "console_scripts": [
