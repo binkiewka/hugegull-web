@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import re
 import time
@@ -7,7 +9,7 @@ from pathlib import Path
 
 
 class Utils:
-    def __init__(self):
+    def __init__(self) -> None:
         self.ansi_colors = {
             "black": "\033[30m",
             "red": "\033[31m",
@@ -75,7 +77,7 @@ class Utils:
     def info(self, text: str) -> None:
         self.print(text, "cyan")
 
-    def get_env(self, what: str) -> bool:
+    def get_env(self, what: str) -> str:
         return os.environ.get(what, "")
 
     def notify(self, message: str) -> None:
@@ -91,9 +93,9 @@ class Utils:
         home = Path.home()
 
         if path.is_relative_to(home):
-            return Path("~") / path.relative_to(home)
+            return str(Path("~") / path.relative_to(home))
 
-        return path
+        return str(path)
 
 
 utils = Utils()

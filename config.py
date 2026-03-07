@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 import time
@@ -7,11 +9,11 @@ from utils import utils
 try:
     import tomllib
 except ImportError:
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore
 
 
 class Config:
-    def __init__(self):
+    def __init__(self) -> None:
         self.url = ""
         self.name = ""
         self.fps = 30
@@ -35,7 +37,7 @@ class Config:
         run_id = str(int(time.time() * 1000))
         self.project_dir = os.path.join(self.temp_dir, f"project_{run_id}")
 
-    def make_dirs(self):
+    def make_dirs(self) -> None:
         self.config_path = os.path.expanduser("~/.config/hugegull/config.toml")
         self.config_dir = os.path.dirname(self.config_path)
 
@@ -46,7 +48,7 @@ class Config:
             with open(self.config_path, "w") as f:
                 f.write("")
 
-    def read_args(self):
+    def read_args(self) -> None:
         if len(sys.argv) >= 3:
             self.url = sys.argv[1]
             self.name = sys.argv[2]
@@ -62,21 +64,21 @@ class Config:
         if not self.name:
             self.name = self.env_name or utils.get_random_name()
 
-    def read_file(self):
+    def read_file(self) -> None:
         with open(self.config_path, "rb") as f:
-            self.config_data = tomllib.load(f)
+            config_data = tomllib.load(f)
 
-        if "duration" in self.config_data:
-            self.duration = float(self.config_data["duration"])
+        if "duration" in config_data:
+            self.duration = float(config_data["duration"])
 
-        if "fps" in self.config_data:
-            self.fps = int(self.config_data["fps"])
+        if "fps" in config_data:
+            self.fps = int(config_data["fps"])
 
-        if "crf" in self.config_data:
-            self.crf = int(self.config_data["crf"])
+        if "crf" in config_data:
+            self.crf = int(config_data["crf"])
 
-        if "path" in self.config_data:
-            self.path = self.config_data["path"]
+        if "path" in config_data:
+            self.path = config_data["path"]
 
 
 config = Config()

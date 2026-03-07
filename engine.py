@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import os
 import random
 import subprocess
 import json
 import shutil
+from typing import Any
 
 from config import config
 from utils import utils
@@ -10,8 +13,8 @@ from utils import utils
 
 class Engine:
     def __init__(self) -> None:
-        self.url = config.url
-        self.clips = []
+        self.url: dict[str, Any] | str = config.url
+        self.clips: list[str] = []
         self.duration = 0.0
         self.prepare()
 
@@ -29,7 +32,7 @@ class Engine:
     def start(self) -> None:
         utils.info("Starting...")
 
-        if utils.is_site(self.url):
+        if utils.is_site(str(self.url)):
             self.resolve_with_ytdlp()
         else:
             self.get_stream_duration()
@@ -48,7 +51,7 @@ class Engine:
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
-            self.url,
+            str(self.url),
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
@@ -86,9 +89,9 @@ class Engine:
         except Exception as e:
             utils.error(f"Error parsing yt-dlp output: {e}")
 
-    def generate_clip_sections(self) -> None:
+    def generate_clip_sections(self) -> list[dict[str, Any]]:
         duration = config.duration
-        sections = []
+        sections: dict[str, Any] = []
         current_sum = 0.0
 
         end_buffer = 2.0
