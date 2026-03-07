@@ -22,26 +22,21 @@ class Utils:
             "reset": "\033[0m",
         }
 
-    def get_random_name(self) -> str:
-        dict_path = "/usr/share/dict/words"
+        self.words: list[str] = []
 
-        if os.path.exists(dict_path):
-            with open(dict_path, "r") as f:
-                words = f.readlines()
+    def load_words(self) -> None:
+        path = Path(__file__).parent / "nouns.txt"
 
-            valid_words = []
+        with open(path, "r") as f:
+            self.words = [line.strip() for line in f]
 
-            for w in words:
-                clean_w = w.strip().lower().replace("'", "")
+    def get_random_name(self, n: int = 2, join_str: str = "_") -> str:
 
-                if re.match(r"^[a-z]+$", clean_w):
-                    valid_words.append(clean_w)
+        if not self.words:
+            self.load_words()
 
-            if len(valid_words) >= 2:
-                selected = random.sample(valid_words, 2)
-                return f"{selected[0]}_{selected[1]}"
-
-        return str(int(time.time()))
+        selected = random.sample(self.words, n)
+        return join_str.join(selected)
 
     def is_url(self, s: str) -> bool:
         return s.startswith(("http", "https"))

@@ -2,3 +2,5 @@
 output/*
 render/*
 *.pyc
+hugegull.egg-info/*
+build/*
