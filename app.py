@@ -47,7 +47,6 @@ class App:
         self.open_button = self.make_button("Open", self.open_clicked)
         self.exit_button = self.make_button("Exit", self.exit_clicked)
 
-        # Adding a dummy Window() at the end acts as a spacer to consume the rest of the empty space
         self.button_container = VSplit(
             [
                 self.paste_button,
@@ -93,44 +92,34 @@ class App:
 
         @self.kb.add(Keys.ScrollUp, eager=True)
         def _(event):
-            self.log_cursor_row -= 3
-
-            if self.log_cursor_row < 0:
-                self.log_cursor_row = 0
-
+            self.scroll_cursor(-3)
             event.app.invalidate()
 
         @self.kb.add(Keys.ScrollDown, eager=True)
         def _(event):
-            self.log_cursor_row += 3
-            max_row = max(0, len(self.log_lines) - 1)
-
-            if self.log_cursor_row > max_row:
-                self.log_cursor_row = max_row
-
+            self.scroll_cursor(3)
             event.app.invalidate()
 
         @self.kb.add(Keys.PageUp, eager=True)
         def _(event):
             info = self.output_window.render_info
-            step = info.window_height if info else 10
-            self.log_cursor_row -= step
+            step = 10
 
-            if self.log_cursor_row < 0:
-                self.log_cursor_row = 0
+            if info:
+                step = info.window_height
 
+            self.scroll_cursor(-step)
             event.app.invalidate()
 
         @self.kb.add(Keys.PageDown, eager=True)
         def _(event):
             info = self.output_window.render_info
-            step = info.window_height if info else 10
-            self.log_cursor_row += step
-            max_row = max(0, len(self.log_lines) - 1)
+            step = 10
 
-            if self.log_cursor_row > max_row:
-                self.log_cursor_row = max_row
+            if info:
+                step = info.window_height
 
+            self.scroll_cursor(step)
             event.app.invalidate()
 
         self.app = Application(
@@ -142,6 +131,29 @@ class App:
         )
 
         self.log("Ready. Paste a URL and press Enter or click Start.", "class:info")
+
+    def scroll_cursor(self, delta):
+        info = self.output_window.render_info
+
+        if info:
+            if delta < 0:
+                self.log_cursor_row = self.output_window.vertical_scroll + delta
+            else:
+                bottom_edge = self.output_window.vertical_scroll + info.window_height - 1
+                self.log_cursor_row = bottom_edge + delta
+        else:
+            self.log_cursor_row += delta
+
+        max_row = len(self.log_lines) - 1
+
+        if max_row < 0:
+            max_row = 0
+
+        if self.log_cursor_row > max_row:
+            self.log_cursor_row = max_row
+
+        if self.log_cursor_row < 0:
+            self.log_cursor_row = 0
 
     def start_clicked(self):
         from engine import engine
@@ -202,7 +214,10 @@ class App:
                 self.log_cursor_row -= 1
 
         if do_scroll:
-            self.log_cursor_row = max(0, len(self.log_lines) - 1)
+            self.log_cursor_row = len(self.log_lines) - 1
+
+            if self.log_cursor_row < 0:
+                self.log_cursor_row = 0
 
         app = get_app()
 
@@ -210,7 +225,16 @@ class App:
             app.invalidate()
 
     def get_log_text(self):
-        return FormattedText(self.log_lines)
+        if not self.log_lines:
+            return FormattedText([])
+
+        res = list(self.log_lines)
+        last_style, last_text = res[-1]
+
+        if last_text.endswith("\n"):
+            res[-1] = (last_style, last_text[:-1])
+
+        return FormattedText(res)
 
     def make_button(self, text, handler):
         return Button(
