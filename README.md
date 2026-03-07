@@ -15,7 +15,7 @@ git clone this somewhere.
 
 Make a shell alias:
 
-```alias hgg="python ~/code/hugegull/hugegull.py"```
+```alias hgg="python ~/code/hugegull/main.py"```
 
 Edit ~/.config/hugegull/hugegull.conf
 

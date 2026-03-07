@@ -8,14 +8,15 @@ from prompt_toolkit.widgets import Button, TextArea, Frame
 from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import FormattedText
 
-from Config import config
-from Log import log
-from Utils import utils
-from Engine import engine
+from config import config
+from utils import utils
 
 
 class App:
     def __init__(self):
+        self.log_lines = []
+        self.max_lines = 200
+
         self.url_input = TextArea(
             text=config.default_url,
             prompt=" URL: ",
@@ -23,7 +24,7 @@ class App:
             accept_handler=self.accept_url,
         )
 
-        self.output_window = Window(content=FormattedTextControl(get_log_text))
+        self.output_window = Window(content=FormattedTextControl(self.get_log_text))
 
         self.start_button = Button("Start", handler=self.start_clicked)
         self.abort_button = Button("Abort", handler=self.abort_clicked)
@@ -83,6 +84,8 @@ class App:
         log.add("Ready. Paste a URL and press Enter or click Start.", "class:info")
 
     def start_clicked(self):
+        from engine import engine
+
         url = self.url_input.text.strip()
 
         if not url:
@@ -124,3 +127,17 @@ class App:
 
     def run(self):
         return self.app.run()
+
+    def log(self, text, style="class:info"):
+        self.log_lines.append((style, str(text) + "\n"))
+
+        if len(self.log_lines) > self.max_lines:
+            self.log_lines.pop(0)
+
+        app = get_app()
+
+        if app:
+            app.invalidate()
+
+    def get_log_text(self):
+        return FormattedText(log_lines)
