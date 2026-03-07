@@ -1,8 +1,8 @@
 ![](seagulls.jpg)
 
-This gets 8 random sections from a stream video.
+This gets random sections from a stream video.
 
-Each section is 6 seconds long.
+Each section is of variable length.
 
 Then it joins them into a single video.
 
