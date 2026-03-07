@@ -31,7 +31,7 @@ class App:
         self.start_button = self.make_button("⚙️ Start", self.start_clicked)
         self.abort_button = self.make_button("💀 Abort", self.abort_clicked)
         self.clear_button = self.make_button("🧽 Clear", self.clear_clicked)
-        self.clear_button = self.make_button("📁 Open", self.open_clicked)
+        self.open_button = self.make_button("📁 Open", self.open_clicked)
         self.exit_button = self.make_button("🥾 Exit", self.exit_clicked)
 
         # Adding a dummy Window() at the end acts as a spacer to consume the rest of the empty space
@@ -41,6 +41,7 @@ class App:
                 self.start_button,
                 self.abort_button,
                 self.clear_button,
+                self.open_button,
                 self.exit_button,
                 Window(),
             ],
@@ -151,7 +152,7 @@ class App:
             handler=handler,
             left_symbol="",
             right_symbol="",
-            width=10,
+            width=len(text) + 2,
         )
 
 
