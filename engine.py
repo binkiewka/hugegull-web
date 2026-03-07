@@ -9,13 +9,13 @@ from utils import utils
 
 
 class Engine:
-    def __init__(self):
+    def __init__(self) -> None:
         self.url = config.url
         self.clips = []
         self.duration = 0.0
         self.prepare()
 
-    def prepare(self):
+    def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
         os.makedirs(config.output_dir, exist_ok=True)
 
@@ -26,7 +26,7 @@ class Engine:
             self.file = os.path.join(config.output_dir, f"{config.name}_{counter}.mp4")
             counter += 1
 
-    def start(self):
+    def start(self) -> None:
         utils.info("Starting...")
 
         if utils.is_site(self.url):
@@ -42,7 +42,7 @@ class Engine:
         self.generate_random_clips()
         self.concatenate_clips()
 
-    def resolve_with_ytdlp(self):
+    def resolve_with_ytdlp(self) -> None:
         command = [
             "yt-dlp",
             "-f",
@@ -86,22 +86,23 @@ class Engine:
         except Exception as e:
             utils.error(f"Error parsing yt-dlp output: {e}")
 
-    def generate_clip_sections(self, target_duration, total_stream_duration):
+    def generate_clip_sections(self) -> None:
+        duration = config.duration
         sections = []
         current_sum = 0.0
 
         end_buffer = 2.0
-        safe_duration = total_stream_duration - end_buffer
+        safe_duration = self.duration - end_buffer
 
-        while current_sum < target_duration:
+        while current_sum < duration:
             clip_length = random.triangular(
                 config.min_clip_duration,
                 config.max_clip_duration,
                 config.avg_clip_duration,
             )
 
-            if current_sum + clip_length > target_duration:
-                clip_length = target_duration - current_sum
+            if current_sum + clip_length > duration:
+                clip_length = duration - current_sum
 
                 if clip_length < config.min_clip_duration:
                     clip_length = config.min_clip_duration
@@ -113,13 +114,12 @@ class Engine:
 
             start = random.uniform(0, max_start)
             sections.append({"start": start, "duration": clip_length})
-
             current_sum += clip_length
 
         return sections
 
-    def generate_random_clips(self):
-        sections = self.generate_clip_sections(config.duration, self.duration)
+    def generate_random_clips(self) -> None:
+        sections = self.generate_clip_sections()
         total_sections = len(sections)
         is_split_stream = False
 
@@ -174,7 +174,7 @@ class Engine:
 
             self.clips.append(name)
 
-    def concatenate_clips(self):
+    def concatenate_clips(self) -> None:
         if not self.clips:
             utils.error("No clips to concatenate.")
             return
@@ -211,7 +211,7 @@ class Engine:
             shutil.rmtree(config.project_dir, ignore_errors=True)
             utils.info(f"Saved: {self.file})")
 
-    def get_stream_duration(self):
+    def get_stream_duration(self) -> None:
         command = [
             "ffprobe",
             "-v",

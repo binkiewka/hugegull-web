@@ -6,7 +6,7 @@ from utils import utils
 from engine import engine
 
 
-def get_info():
+def get_info() -> None:
     name = ""
     version = ""
 
@@ -28,13 +28,13 @@ def get_info():
     return name, version
 
 
-def show_usage():
+def show_usage() -> None:
     utils.print("Usage: python /path/to/main.py <url> <name>")
     utils.print("Or set HUGE_URL and HUGE_NAME env vars.")
     utils.print("Suggested alias: hgg")
 
 
-def main():
+def main() -> None:
     args = sys.argv[1:]
 
     if "--help" in args or "--version" in args:

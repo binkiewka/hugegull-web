@@ -20,7 +20,7 @@ class Utils:
             "reset": "\033[0m",
         }
 
-    def get_random_name(self):
+    def get_random_name(self) -> str:
         dict_path = "/usr/share/dict/words"
 
         if os.path.exists(dict_path):
@@ -41,10 +41,10 @@ class Utils:
 
         return str(int(time.time()))
 
-    def is_url(self, s):
+    def is_url(self, s: str) -> bool:
         return s.startswith(("http", "https"))
 
-    def is_site(self, s):
+    def is_site(self, s: str) -> bool:
         domains = [
             "youtu.be",
             "youtube.com",
@@ -53,7 +53,7 @@ class Utils:
 
         return self.is_url(s) and any(d in s for d in domains)
 
-    def print(self, text, color=""):
+    def print(self, text: str, color: str = "") -> None:
         if color:
             color_key = color.lower()
 
@@ -66,19 +66,19 @@ class Utils:
         else:
             print(text)
 
-    def error(self, text):
+    def error(self, text: str) -> None:
         self.print(text, "red")
 
-    def action(self, text):
+    def action(self, text: str) -> None:
         self.print(text, "yellow")
 
-    def info(self, text):
+    def info(self, text: str) -> None:
         self.print(text, "cyan")
 
-    def get_env(self, what):
+    def get_env(self, what: str) -> bool:
         return os.environ.get(what, "")
 
-    def notify(self, message):
+    def notify(self, message: str) -> None:
         title = "🤯 hugegull"
 
         try:
@@ -86,7 +86,7 @@ class Utils:
         except subprocess.CalledProcessError as e:
             utils.print(f"Error sending notification: {e}")
 
-    def short_path(self, file_path):
+    def short_path(self, file_path: str) -> str:
         path = Path(file_path).resolve()
         home = Path.home()
 
