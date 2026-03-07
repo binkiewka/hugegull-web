@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import os
-import re
-import time
 import random
 import subprocess
 from pathlib import Path
@@ -31,7 +29,6 @@ class Utils:
             self.words = [line.strip() for line in f]
 
     def get_random_name(self, n: int = 2, join_str: str = "_") -> str:
-
         if not self.words:
             self.load_words()
 
