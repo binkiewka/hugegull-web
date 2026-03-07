@@ -127,14 +127,14 @@ class Engine:
         total_sections = len(sections)
         is_split_stream = False
 
-        if isinstance(self.data):
+        if self.data:
             if self.data.get("audio") is not None:
                 is_split_stream = True
 
-        v_data = self.data
-
         if self.data:
             v_data = self.data["video"]
+        else:
+            v_data = self.url
 
         for i in range(total_sections):
             section = sections[i]
@@ -223,7 +223,7 @@ class Engine:
             "-print_format",
             "json",
             "-show_format",
-            self.data,
+            self.url,
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)

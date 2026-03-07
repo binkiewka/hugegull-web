@@ -8,7 +8,7 @@ from utils import utils
 from engine import engine
 
 
-def get_info() -> None:
+def get_info() -> tuple[str, str]:
     name = ""
     version = ""
 
