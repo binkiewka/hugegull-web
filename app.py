@@ -96,6 +96,8 @@ class App:
         engine.start(url)
 
     def abort_clicked(self):
+        from engine import engine
+
         self.log("Aborting process...", "class:warning")
         engine.abort()
 
