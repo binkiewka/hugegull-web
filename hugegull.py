@@ -6,11 +6,23 @@ import sys
 import time
 import re
 import shutil
+import threading
+
+from prompt_toolkit.application import Application
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout.containers import HSplit, VSplit, Window
+from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.layout.layout import Layout
+from prompt_toolkit.widgets import Button, TextArea, Frame
+from prompt_toolkit.styles import Style
+from prompt_toolkit.formatted_text import FormattedText
 
 try:
     import tomllib
 except ImportError:
     import tomli as tomllib
+
 
 # Configuration path setup
 CONFIG_PATH = os.path.expanduser("~/.config/hugegull/config.toml")
@@ -54,6 +66,24 @@ TEMP_DIR = os.path.join(PATH, "temp")
 OUTPUT_DIR = os.path.join(PATH, "output")
 
 
+# --- UI Logging System ---
+log_lines = []
+
+def ui_log(text, style="class:info"):
+    log_lines.append((style, str(text) + "\n"))
+
+    if len(log_lines) > 200:
+        log_lines.pop(0)
+
+    app = get_app()
+    if app:
+        app.invalidate()
+
+def get_log_text():
+    return FormattedText(log_lines)
+
+
+# --- Core Logic ---
 def get_random_name():
     dict_path = "/usr/share/dict/words"
 
@@ -77,7 +107,7 @@ def get_random_name():
 
 
 def resolve_with_ytdlp(url):
-    print("Resolving URL via yt-dlp...")
+    ui_log("Resolving URL via yt-dlp...", "class:info")
 
     command = [
         "yt-dlp",
@@ -90,8 +120,8 @@ def resolve_with_ytdlp(url):
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print("Error resolving URL. yt-dlp output:")
-        print(result.stderr)
+        ui_log("Error resolving URL. yt-dlp output:", "class:error")
+        ui_log(result.stderr, "class:error")
         return url, 0.0
 
     try:
@@ -116,7 +146,7 @@ def resolve_with_ytdlp(url):
             return {"video": metadata.get("url"), "audio": None}, duration
 
     except Exception as e:
-        print(f"Error parsing yt-dlp output: {e}")
+        ui_log(f"Error parsing yt-dlp output: {e}", "class:error")
         return url, 0.0
 
 
@@ -128,7 +158,6 @@ def generate_clip_sections(target_duration, total_stream_duration):
     safe_duration = total_stream_duration - end_buffer
 
     while current_sum < target_duration:
-        # Bias the duration heavily towards 6.0 seconds
         clip_length = random.triangular(
             MIN_CLIP_DURATION, MAX_CLIP_DURATION, AVG_CLIP_DURATION
         )
@@ -154,11 +183,10 @@ def generate_clip_sections(target_duration, total_stream_duration):
 
 def generate_random_clips(stream_data, total_duration, run_temp_dir):
     clip_files = []
-
     sections = generate_clip_sections(DURATION, total_duration)
     total_sections = len(sections)
 
-    print(f"Targeting {total_sections} random clips for this run...")
+    ui_log(f"Targeting {total_sections} random clips for this run...", "class:info")
 
     is_split_stream = False
 
@@ -177,7 +205,6 @@ def generate_random_clips(stream_data, total_duration, run_temp_dir):
         current_clip_duration = section["duration"]
 
         output_name = os.path.join(run_temp_dir, f"temp_clip_{i + 1}.mp4")
-
         command = ["ffmpeg", "-ss", str(start_time), "-i", v_url]
 
         if is_split_stream:
@@ -185,32 +212,23 @@ def generate_random_clips(stream_data, total_duration, run_temp_dir):
 
         command.extend(
             [
-                "-t",
-                str(current_clip_duration),
-                "-vf",
-                f"fps={FPS}",
-                "-c:v",
-                "libx264",
-                "-crf",
-                str(CRF),
-                "-c:a",
-                "aac",
-                "-video_track_timescale",
-                "90000",
-                "-y",
-                output_name,
+                "-t", str(current_clip_duration),
+                "-vf", f"fps={FPS}",
+                "-c:v", "libx264",
+                "-crf", str(CRF),
+                "-c:a", "aac",
+                "-video_track_timescale", "90000",
+                "-y", output_name,
             ]
         )
 
-        print(
-            f"Extracting clip {i + 1}/{total_sections} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)..."
-        )
+        ui_log(f"Extracting clip {i + 1}/{total_sections} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)...", "class:warning")
 
         result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode != 0:
-            print(f"Error extracting clip {i}:")
-            print(result.stderr)
+            ui_log(f"Error extracting clip {i}:", "class:error")
+            ui_log(result.stderr, "class:error")
             continue
 
         clip_files.append(output_name)
@@ -220,7 +238,7 @@ def generate_random_clips(stream_data, total_duration, run_temp_dir):
 
 def concatenate_clips(clip_files, output_file, run_temp_dir):
     if not clip_files:
-        print("No clips to concatenate.")
+        ui_log("No clips to concatenate.", "class:error")
         return
 
     list_file = os.path.join(run_temp_dir, "concat_list.txt")
@@ -231,44 +249,29 @@ def concatenate_clips(clip_files, output_file, run_temp_dir):
             f.write(f"file '{abs_clip_path}'\n")
 
     command = [
-        "ffmpeg",
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        list_file,
-        "-c",
-        "copy",
-        "-video_track_timescale",
-        "90000",
-        "-y",
-        output_file,
+        "ffmpeg", "-f", "concat", "-safe", "0",
+        "-i", list_file,
+        "-c", "copy",
+        "-video_track_timescale", "90000",
+        "-y", output_file,
     ]
 
-    print("Concatenating clips...")
+    ui_log("Concatenating clips...", "class:info")
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print("Error concatenating clips:")
-        print(result.stderr)
+        ui_log("Error concatenating clips:", "class:error")
+        ui_log(result.stderr, "class:error")
     else:
-        print("Cleaning up temporary files...")
-
-        # Remove the unique run directory entirely
+        ui_log("Cleaning up temporary files...", "class:info")
         shutil.rmtree(run_temp_dir, ignore_errors=True)
-        print(f"Video saved as {output_file}")
+        ui_log(f"Video saved as {output_file}", "class:success")
 
 
 def get_stream_duration(url):
     command = [
-        "ffprobe",
-        "-v",
-        "quiet",
-        "-print_format",
-        "json",
-        "-show_format",
-        url,
+        "ffprobe", "-v", "quiet", "-print_format", "json",
+        "-show_format", url,
     ]
 
     result = subprocess.run(command, capture_output=True, text=True)
@@ -297,33 +300,18 @@ def requires_ytdlp(s):
     return False
 
 
-def main():
-    stream_url = None
-    base_name = None
+def notify_done():
+    title = "🤯 hugegull"
+    message = "Video Complete"
 
-    if len(sys.argv) >= 3:
-        stream_url = sys.argv[1]
-        base_name = sys.argv[2]
-    elif len(sys.argv) == 2:
-        arg = sys.argv[1]
+    try:
+        subprocess.run(["notify-send", title, message], check=True)
+    except subprocess.CalledProcessError as e:
+        ui_log(f"Error sending notification: {e}", "class:error")
 
-        # Check for both http URLs and local files
-        if is_url(arg) or os.path.exists(arg):
-            stream_url = arg
-            base_name = get_random_name()
-        else:
-            stream_url = os.environ.get("HUGE_URL")
-            base_name = arg
-    else:
-        stream_url = os.environ.get("HUGE_URL")
-        base_name = get_random_name()
 
-    if not stream_url:
-        print("Usage: python script.py [<m3u8_url>] [<output_name>]")
-        print("Or set HUGE_URL environment variable.")
-        sys.exit(1)
-
-    # Generate a unique temp directory for this specific run
+def run_pipeline(stream_url):
+    base_name = get_random_name()
     run_id = str(int(time.time() * 1000))
     run_temp_dir = os.path.join(TEMP_DIR, f"project_{run_id}")
 
@@ -337,7 +325,7 @@ def main():
         output_file = os.path.join(OUTPUT_DIR, f"{base_name}_{counter}.mp4")
         counter += 1
 
-    print("Fetching stream duration...")
+    ui_log("Fetching stream duration...", "class:info")
     total_duration = 0.0
 
     if requires_ytdlp(stream_url):
@@ -346,27 +334,96 @@ def main():
         total_duration = get_stream_duration(stream_url)
 
     if total_duration <= 0:
-        print("Could not determine stream duration or stream is live/endless.")
-        # Clean up the unused temp folder before exiting
+        ui_log("Could not determine stream duration or stream is live/endless.", "class:error")
         shutil.rmtree(run_temp_dir, ignore_errors=True)
         return
 
-    print(f"Stream duration: {total_duration} seconds.")
+    ui_log(f"Stream duration: {total_duration} seconds.", "class:success")
 
-    # Pass the unique temp directory downward
     clips = generate_random_clips(stream_url, total_duration, run_temp_dir)
     concatenate_clips(clips, output_file, run_temp_dir)
     notify_done()
 
 
-def notify_done():
-    title = "🤯 hugegull"
-    message = "Video Complete"
+# --- TUI Application ---
+def main():
+    # URL Input
+    default_url = os.environ.get("HUGE_URL", "")
+    url_input = TextArea(
+        text=default_url,
+        prompt=" URL: ",
+        multiline=False,
+    )
 
-    try:
-        subprocess.run(["notify-send", title, message], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error sending notification: {e}")
+    # Output Window
+    output_window = Window(content=FormattedTextControl(get_log_text))
+
+    # Button Handlers
+    def start_clicked():
+        url = url_input.text.strip()
+
+        if not url:
+            ui_log("Please enter a URL first.", "class:error")
+            return
+
+        ui_log(f"Starting job for: {url}", "class:success")
+        threading.Thread(target=run_pipeline, args=(url,), daemon=True).start()
+
+    def clear_clicked():
+        log_lines.clear()
+        get_app().invalidate()
+
+    def exit_clicked():
+        get_app().exit()
+
+    # Buttons Layout
+    start_button = Button("Start", handler=start_clicked)
+    clear_button = Button("Clear Output", handler=clear_clicked)
+    exit_button = Button("Exit", handler=exit_clicked)
+
+    button_container = VSplit(
+        [start_button, clear_button, exit_button],
+        padding=2
+    )
+
+    # Main Layout Assembly
+    root_container = HSplit([
+        Frame(
+            HSplit([url_input, button_container]),
+            title="HugeGull"
+        ),
+        Frame(output_window, title="Output Log"),
+    ])
+
+    layout = Layout(root_container)
+
+    # Styles
+    style = Style.from_dict({
+        "info": "cyan",
+        "success": "green bold",
+        "error": "red bold",
+        "warning": "yellow",
+        "frame.label": "bold",
+    })
+
+    # Keybindings
+    kb = KeyBindings()
+
+    @kb.add("c-c")
+    def _(event):
+        event.app.exit()
+
+    # Create and run application
+    app = Application(
+        layout=layout,
+        key_bindings=kb,
+        style=style,
+        mouse_support=True,
+        full_screen=True,
+    )
+
+    ui_log("Ready. Paste a URL and click Start.", "class:info")
+    app.run()
 
 
 if __name__ == "__main__":
