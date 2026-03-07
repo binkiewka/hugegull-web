@@ -21,7 +21,7 @@ class App:
         self.version = "1.2"
         self.log_lines = []
         self.max_lines = 200
-        self.auto_scroll = True
+        self.log_cursor_row = 0
 
         self.url_input = TextArea(
             text=config.default_url,
@@ -33,8 +33,7 @@ class App:
         self.output_window = Window(
             content=FormattedTextControl(
                 self.get_log_text,
-                focusable=False,
-                get_cursor_position=self.get_cursor,
+                get_cursor_position=lambda: Point(0, self.log_cursor_row)
             ),
             right_margins=[ScrollbarMargin(display_arrows=True)],
             always_hide_cursor=True,
@@ -48,6 +47,7 @@ class App:
         self.open_button = self.make_button("Open", self.open_clicked)
         self.exit_button = self.make_button("Exit", self.exit_clicked)
 
+        # Adding a dummy Window() at the end acts as a spacer to consume the rest of the empty space
         self.button_container = VSplit(
             [
                 self.paste_button,
@@ -93,57 +93,43 @@ class App:
 
         @self.kb.add(Keys.ScrollUp, eager=True)
         def _(event):
-            if not self.log_lines:
-                return
+            self.log_cursor_row -= 3
 
-            if self.auto_scroll:
-                self.auto_scroll = False
+            if self.log_cursor_row < 0:
+                self.log_cursor_row = 0
 
-            self.output_window.vertical_scroll = max(0, self.output_window.vertical_scroll - 1)
             event.app.invalidate()
 
         @self.kb.add(Keys.ScrollDown, eager=True)
         def _(event):
-            if not self.log_lines:
-                return
+            self.log_cursor_row += 3
+            max_row = max(0, len(self.log_lines) - 1)
 
-            if self.auto_scroll:
-                return
-
-            max_scroll = max(0, len(self.log_lines) - 1)
-            self.output_window.vertical_scroll += 1
-
-            if self.output_window.vertical_scroll >= max_scroll:
-                self.output_window.vertical_scroll = max_scroll
-                self.auto_scroll = True
+            if self.log_cursor_row > max_row:
+                self.log_cursor_row = max_row
 
             event.app.invalidate()
 
         @self.kb.add(Keys.PageUp, eager=True)
         def _(event):
-            if not self.log_lines:
-                return
+            info = self.output_window.render_info
+            step = info.window_height if info else 10
+            self.log_cursor_row -= step
 
-            if self.auto_scroll:
-                self.auto_scroll = False
+            if self.log_cursor_row < 0:
+                self.log_cursor_row = 0
 
-            self.output_window.vertical_scroll = max(0, self.output_window.vertical_scroll - 10)
             event.app.invalidate()
 
         @self.kb.add(Keys.PageDown, eager=True)
         def _(event):
-            if not self.log_lines:
-                return
+            info = self.output_window.render_info
+            step = info.window_height if info else 10
+            self.log_cursor_row += step
+            max_row = max(0, len(self.log_lines) - 1)
 
-            if self.auto_scroll:
-                return
-
-            max_scroll = max(0, len(self.log_lines) - 1)
-            self.output_window.vertical_scroll += 10
-
-            if self.output_window.vertical_scroll >= max_scroll:
-                self.output_window.vertical_scroll = max_scroll
-                self.auto_scroll = True
+            if self.log_cursor_row > max_row:
+                self.log_cursor_row = max_row
 
             event.app.invalidate()
 
@@ -156,13 +142,6 @@ class App:
         )
 
         self.log("Ready. Paste a URL and press Enter or click Start.", "class:info")
-
-    def get_cursor(self):
-        if self.auto_scroll:
-            if self.log_lines:
-                return Point(0, len(self.log_lines) - 1)
-
-        return None
 
     def start_clicked(self):
         from engine import engine
@@ -183,8 +162,7 @@ class App:
 
     def clear_clicked(self):
         self.log_lines.clear()
-        self.output_window.vertical_scroll = 0
-        self.auto_scroll = True
+        self.log_cursor_row = 0
         get_app().invalidate()
 
     def open_clicked(self):
@@ -210,15 +188,21 @@ class App:
         return self.app.run()
 
     def log(self, text, style="class:info"):
+        do_scroll = True
+
+        if self.log_lines and self.log_cursor_row < len(self.log_lines) - 1:
+            do_scroll = False
+
         self.log_lines.append((style, str(text) + "\n"))
 
         if len(self.log_lines) > self.max_lines:
             self.log_lines.pop(0)
 
-            # Shift the screen down by 1 if a line gets deleted above while reading history
-            if not self.auto_scroll:
-                if self.output_window.vertical_scroll > 0:
-                    self.output_window.vertical_scroll -= 1
+            if not do_scroll and self.log_cursor_row > 0:
+                self.log_cursor_row -= 1
+
+        if do_scroll:
+            self.log_cursor_row = max(0, len(self.log_lines) - 1)
 
         app = get_app()
 
