@@ -28,20 +28,18 @@ def main():
         output_file = os.path.join(config.output_dir, f"{config.name}_{counter}.mp4")
         counter += 1
 
-    utils.print("Fetching stream duration...")
+    utils.info("Starting...")
     total_duration = 0.0
 
-    if utils.is_service(config.url):
+    if utils.is_site(config.url):
         config.url, total_duration = engine.resolve_with_ytdlp(config.url)
     else:
         total_duration = engine.get_stream_duration(config.url)
 
     if total_duration <= 0:
-        utils.print("Could not determine stream duration or stream is live/endless.")
+        utils.info("Could not determine stream duration or stream is live/endless.")
         shutil.rmtree(run_temp_dir, ignore_errors=True)
         return
-
-    utils.print(f"Stream duration: {total_duration} seconds.")
 
     clips = engine.generate_random_clips(config.url, total_duration, run_temp_dir)
     engine.concatenate_clips(clips, output_file, run_temp_dir)

@@ -130,7 +130,7 @@ class Engine:
             )
 
             utils.action(
-                f"Extracting clip {i + 1}/{total_sections} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)..."
+                f"Clip {i + 1} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)..."
             )
 
             result = subprocess.run(command, capture_output=True, text=True)
@@ -179,11 +179,9 @@ class Engine:
             utils.error("Error concatenating clips:")
             utils.error(result.stderr)
         else:
-            utils.info("Cleaning up temporary files...")
-
             # Remove the unique run directory entirely
             shutil.rmtree(run_temp_dir, ignore_errors=True)
-            utils.info(f"Video saved as {output_file}")
+            utils.done(f"Video saved as {output_file}")
 
     def get_stream_duration(self, url):
         command = [

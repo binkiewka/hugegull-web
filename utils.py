@@ -63,13 +63,15 @@ class Utils:
             print(text)
 
     def error(self, text):
-        print(text, "red")
+        self.print(text, "red")
 
     def action(self, text):
-        print(text, "yellow")
+        self.print(text, "yellow")
 
     def info(self, text):
-        print(text, "cyan")
+        self.print(text, "cyan")
 
+    def done(self, text):
+        self.print(text, "green")
 
 utils = Utils()
