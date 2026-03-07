@@ -22,7 +22,7 @@ class Config:
         self.info_name = "hugegull"
         self.info_version = "0.0.0"
         self.open = False
-        self.fade = 0.35
+        self.fade = 0.03
 
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
