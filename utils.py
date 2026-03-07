@@ -74,4 +74,5 @@ class Utils:
     def done(self, text):
         self.print(text, "green")
 
+
 utils = Utils()
