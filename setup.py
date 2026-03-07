@@ -11,7 +11,9 @@ setup(
     name="hugegull",
     version="1.0.0",
     py_modules=modules,
-    entry_points={ "console_scripts": [
-        "hugegull = main:main",
-    ] },
+    entry_points={
+        "console_scripts": [
+            "hugegull = main:main",
+        ],
+    },
 )
