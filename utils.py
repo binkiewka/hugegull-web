@@ -86,7 +86,7 @@ class Utils:
         except subprocess.CalledProcessError as e:
             utils.print(f"Error sending notification: {e}")
 
-    def shorten_path(file_path):
+    def short_path(file_path):
         path = Path(file_path).resolve()
         home = Path.home()
 
