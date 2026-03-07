@@ -11,8 +11,8 @@ from engine import engine
 
 def main():
     if not config.url:
-        print("Usage: python main.py [<m3u8_url>] [<output_name>]")
-        print("Or set HUGE_URL environment variable.")
+        utils.print("Usage: python main.py [<m3u8_url>] [<output_name>]")
+        utils.print("Or set HUGE_URL environment variable.")
         sys.exit(1)
 
     run_id = str(int(time.time() * 1000))
@@ -28,7 +28,7 @@ def main():
         output_file = os.path.join(config.output_dir, f"{config.name}_{counter}.mp4")
         counter += 1
 
-    print("Fetching stream duration...")
+    utils.print("Fetching stream duration...")
     total_duration = 0.0
 
     if utils.is_service(config.url):
@@ -37,11 +37,11 @@ def main():
         total_duration = engine.get_stream_duration(config.url)
 
     if total_duration <= 0:
-        print("Could not determine stream duration or stream is live/endless.")
+        utils.print("Could not determine stream duration or stream is live/endless.")
         shutil.rmtree(run_temp_dir, ignore_errors=True)
         return
 
-    print(f"Stream duration: {total_duration} seconds.")
+    utils.print(f"Stream duration: {total_duration} seconds.")
 
     clips = engine.generate_random_clips(config.url, total_duration, run_temp_dir)
     engine.concatenate_clips(clips, output_file, run_temp_dir)
@@ -55,7 +55,7 @@ def notify_done():
     try:
         subprocess.run(["notify-send", title, message], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error sending notification: {e}")
+        utils.print(f"Error sending notification: {e}")
 
 
 if __name__ == "__main__":
