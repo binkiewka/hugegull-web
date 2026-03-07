@@ -1,16 +1,17 @@
-from setuptools import setup
+import tomllib
+from pathlib import Path
 
-from src.info import info
+class Info:
+    name: str
+    version: str
 
-setup(
-    name=info.name,
-    version=info.version,
-    package_dir={"": "src"},
-    packages=[""],
-    package_data={"": ["*.toml"]},
-    entry_points={
-        "console_scripts": [
-            "hugegull = main:main",
-        ],
-    },
-)
+    def __init__(self) -> None:
+        toml_path = Path(__file__).parent / "info.toml"
+
+        with open(toml_path, "rb") as f:
+            info_dict = tomllib.load(f)
+
+        for key, value in info_dict.items():
+            setattr(self, key, value)
+
+info = Info()
