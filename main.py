@@ -7,7 +7,6 @@ from __future__ import annotations
 #  | |  | | |__| | |__| || |____   | |__| | |__| | |____| |____
 #  |_|  |_|\____/ \_____||______|   \_____|\____/|______|______|
 
-import re
 import sys
 
 from config import config
