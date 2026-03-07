@@ -26,12 +26,12 @@ class App:
 
         self.output_window = Window(content=FormattedTextControl(self.get_log_text))
 
-        self.paste_button = Button("Paste", handler=self.paste_clicked)
-        self.start_button = Button("Start", handler=self.start_clicked)
-        self.abort_button = Button("Abort", handler=self.abort_clicked)
-        self.clear_button = Button("Clear", handler=self.clear_clicked)
-        self.clear_button = Button("Open", handler=self.open_clicked)
-        self.exit_button = Button("Exit", handler=self.exit_clicked)
+        self.paste_button = self.make_button("Paste", self.paste_clicked)
+        self.start_button = self.make_button("Start", self.start_clicked)
+        self.abort_button = self.make_button("Abort", self.abort_clicked)
+        self.clear_button = self.make_button("Clear", self.clear_clicked)
+        self.clear_button = self.make_button("Open", self.open_clicked)
+        self.exit_button = self.make_button("Exit", self.exit_clicked)
 
         # Adding a dummy Window() at the end acts as a spacer to consume the rest of the empty space
         self.button_container = VSplit(
@@ -64,6 +64,7 @@ class App:
                 "error": "red bold",
                 "warning": "yellow",
                 "frame.label": "bold",
+                "button": "fg: white",
             }
         )
 
@@ -142,6 +143,15 @@ class App:
 
     def get_log_text(self):
         return FormattedText(self.log_lines)
+
+    def make_button(self, text, handler):
+        return Button(
+            text=text,
+            handler=handler,
+            left_symbol="<",
+            right_symbol=">",
+            width=10,
+        )
 
 
 app = App()
