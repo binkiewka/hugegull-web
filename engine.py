@@ -10,8 +10,6 @@ from utils import utils
 
 class Engine:
     def resolve_with_ytdlp(self, url):
-        utils.info("Resolving URL via yt-dlp...")
-
         command = [
             "yt-dlp",
             "-f",
@@ -88,7 +86,6 @@ class Engine:
         clip_files = []
         sections = self.generate_clip_sections(config.duration, total_duration)
         total_sections = len(sections)
-        utils.info(f"Targeting {total_sections} random clips for this run...")
         is_split_stream = False
 
         if isinstance(stream_data, dict):
@@ -130,7 +127,7 @@ class Engine:
             )
 
             utils.action(
-                f"Clip {i + 1} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)..."
+                f"Clip {i + 1}/{total_sections} starting at {start_time:.2f}s (Duration: {current_clip_duration:.2f}s)"
             )
 
             result = subprocess.run(command, capture_output=True, text=True)
@@ -172,7 +169,6 @@ class Engine:
             output_file,
         ]
 
-        utils.info("Concatenating clips...")
         result = subprocess.run(command, capture_output=True, text=True)
 
         if result.returncode != 0:
