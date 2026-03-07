@@ -11,13 +11,23 @@ The output name can be ommitted to use a random name.
 
 ## Installation
 
+### Automatic (Recommended)
+
+You can simply use `pipx`:
+
+`pipx install git+https://github.com/madprops/hugegull --force`
+
+### Manual
+
 git clone this somewhere.
 
 Make a shell alias:
 
-```alias hgg="python ~/code/hugegull/main.py"```
+`alias hgg="python ~/code/hugegull/main.py"`
 
-Edit ~/.config/hugegull/hugegull.conf
+## Configuration
+
+Edit `~/.config/hugegull/hugegull.conf`
 
 It is empty but you can make it look like this:
 
@@ -30,7 +40,7 @@ crf = 30
 
 ## Usage
 
-```hgg https://something.m3u8```
+`hgg https://something.m3u8`
 
 Or:
 
