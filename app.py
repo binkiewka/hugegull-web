@@ -11,6 +11,7 @@ from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.utils import get_cwidth
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.data_structures import Point
+from prompt_toolkit.mouse_events import MouseEventType
 
 from config import config
 from utils import utils
@@ -40,20 +41,23 @@ class App:
             wrap_lines=True,
         )
 
+        # Attach mouse handler for the wheel
+        self.output_window.mouse_handler = self.handle_mouse
+
         self.paste_button = self.make_button("Paste", self.paste_clicked)
         self.start_button = self.make_button("Start", self.start_clicked)
-        self.abort_button = self.make_button("Abort", self.abort_clicked)
+        self.top_button = self.make_button("Top", self.top_clicked)
+        self.bottom_button = self.make_button("Bottom", self.bottom_clicked)
         self.clear_button = self.make_button("Clear", self.clear_clicked)
-        self.open_button = self.make_button("Open", self.open_clicked)
         self.exit_button = self.make_button("Exit", self.exit_clicked)
 
         self.button_container = VSplit(
             [
                 self.paste_button,
                 self.start_button,
-                self.abort_button,
+                self.top_button,
+                self.bottom_button,
                 self.clear_button,
-                self.open_button,
                 self.exit_button,
                 Window(),
             ],
@@ -90,16 +94,6 @@ class App:
             self.abort_clicked()
             event.app.exit()
 
-        @self.kb.add(Keys.ScrollUp, eager=True)
-        def _(event):
-            self.scroll_cursor(-3)
-            event.app.invalidate()
-
-        @self.kb.add(Keys.ScrollDown, eager=True)
-        def _(event):
-            self.scroll_cursor(3)
-            event.app.invalidate()
-
         @self.kb.add(Keys.PageUp, eager=True)
         def _(event):
             info = self.output_window.render_info
@@ -132,15 +126,35 @@ class App:
 
         self.log("Ready. Paste a URL and press Enter or click Start.", "class:info")
 
+    def handle_mouse(self, mouse_event):
+        if mouse_event.event_type == MouseEventType.SCROLL_UP:
+            self.scroll_cursor(-3)
+            return None
+
+        if mouse_event.event_type == MouseEventType.SCROLL_DOWN:
+            self.scroll_cursor(3)
+            return None
+
+        return NotImplemented
+
     def scroll_cursor(self, delta):
         info = self.output_window.render_info
 
         if info:
+            current_scroll = int(info.vertical_scroll)
+
             if delta < 0:
-                self.log_cursor_row = self.output_window.vertical_scroll + delta
+                if self.log_cursor_row > current_scroll:
+                    self.log_cursor_row = current_scroll
+
+                self.log_cursor_row += delta
             else:
-                bottom_edge = self.output_window.vertical_scroll + info.window_height - 1
-                self.log_cursor_row = bottom_edge + delta
+                bottom_edge = current_scroll + info.window_height - 1
+
+                if self.log_cursor_row < bottom_edge:
+                    self.log_cursor_row = int(bottom_edge)
+
+                self.log_cursor_row += delta
         else:
             self.log_cursor_row += delta
 
@@ -154,6 +168,8 @@ class App:
 
         if self.log_cursor_row < 0:
             self.log_cursor_row = 0
+
+        get_app().invalidate()
 
     def start_clicked(self):
         from engine import engine
@@ -171,6 +187,18 @@ class App:
 
         self.log("Aborting process...", "class:warning")
         engine.abort()
+
+    def top_clicked(self):
+        self.log_cursor_row = 0
+        get_app().invalidate()
+
+    def bottom_clicked(self):
+        self.log_cursor_row = len(self.log_lines) - 1
+
+        if self.log_cursor_row < 0:
+            self.log_cursor_row = 0
+
+        get_app().invalidate()
 
     def clear_clicked(self):
         self.log_lines.clear()
