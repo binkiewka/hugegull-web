@@ -22,6 +22,7 @@ class Config:
         self.info_name = "hugegull"
         self.info_version = "0.0.0"
         self.open = False
+        self.fade = 0.35
 
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
@@ -82,6 +83,9 @@ class Config:
 
         if "path" in config_data:
             self.path = config_data["path"]
+
+        if "fade" in config_data:
+            self.fade = config_data["fade"]
 
 
 config = Config()

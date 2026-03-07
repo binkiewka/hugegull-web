@@ -130,9 +130,6 @@ class Engine:
         total_sections = len(sections)
         is_split_stream = False
 
-        # You could add this to your config file later
-        fade_duration = 0.5
-
         if self.data:
             if self.data.get("audio") is not None:
                 is_split_stream = True
@@ -154,13 +151,13 @@ class Engine:
                 command.extend(["-ss", str(start), "-i", self.data["audio"]])
 
             # Calculate when the fade out should start
-            fade_out_start = duration - fade_duration
+            fade_out_start = duration - config.fade
 
             # Revert the video filter back to just the framerate
             vf_filter = f"fps={config.fps}"
 
             # Keep the audio fade in and out
-            af_filter = f"afade=t=in:st=0:d={fade_duration},afade=t=out:st={fade_out_start}:d={fade_duration}"
+            af_filter = f"afade=t=in:st=0:d={config.fade},afade=t=out:st={fade_out_start}:d={config.fade}"
 
             command.extend(
                 [
