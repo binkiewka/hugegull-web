@@ -21,7 +21,7 @@ class Config:
         self.config_dir = os.path.dirname(self.config_path)
 
         if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir, exist_ok=true)
+            os.makedirs(self.config_dir, exist_ok=True)
 
         if not os.path.exists(self.config_path):
             with open(self.config_path, "w") as f:
@@ -29,8 +29,8 @@ class Config:
 
         self.read_file()
 
-        self.temp_dir = os.path.join(path, "temp")
-        self.output_dir = os.path.join(path, "output")
+        self.temp_dir = os.path.join(self.path, "temp")
+        self.output_dir = os.path.join(self.path, "output")
 
     def read_file(self):
         with open(self.config_path, "rb") as f:

@@ -105,7 +105,7 @@ class App:
                     active_process.terminate()
 
     def clear_clicked(self):
-        log_lines.clear()
+        self.log_lines.clear()
         get_app().invalidate()
 
     def paste_clicked(self):
@@ -140,7 +140,7 @@ class App:
             app.invalidate()
 
     def get_log_text(self):
-        return FormattedText(log_lines)
+        return FormattedText(self.log_lines)
 
 
 app = App()

@@ -2,14 +2,12 @@ import subprocess
 import random
 import os
 import json
-import sys
 import time
-import re
 import shutil
 import threading
 
-from log import log
 from utils import utils
+from config import config
 from app import app
 
 
@@ -21,7 +19,7 @@ class CommandResult:
 
 
 class Engine:
-    def __init__():
+    def __init__(self):
         self.abort_event = threading.Event()
         self.active_process = None
         self.process_lock = threading.Lock()
@@ -62,14 +60,16 @@ class Engine:
 
         while current_sum < target_duration:
             clip_length = random.triangular(
-                MIN_CLIP_DURATION, MAX_CLIP_DURATION, AVG_CLIP_DURATION
+                config.min_clip_duration,
+                config.max_clip_duration,
+                config.avg_clip_duration,
             )
 
             if current_sum + clip_length > target_duration:
                 clip_length = target_duration - current_sum
 
-                if clip_length < MIN_CLIP_DURATION:
-                    clip_length = MIN_CLIP_DURATION
+                if clip_length < config.min_clip_duration:
+                    clip_length = config.min_clip_duration
 
             max_start = safe_duration - clip_length
 
@@ -85,7 +85,7 @@ class Engine:
 
     def generate_random_clips(self, stream_data, total_duration, run_temp_dir):
         clip_files = []
-        sections = self.generate_clip_sections(DURATION, total_duration)
+        sections = self.generate_clip_sections(config.duration, total_duration)
         total_sections = len(sections)
 
         app.log(
@@ -123,11 +123,11 @@ class Engine:
                     "-t",
                     str(current_clip_duration),
                     "-vf",
-                    f"fps={FPS}",
+                    f"fps={config.fps}",
                     "-c:v",
                     "libx264",
                     "-crf",
-                    str(CRF),
+                    str(config.crf),
                     "-c:a",
                     "aac",
                     "-video_track_timescale",
@@ -206,23 +206,23 @@ class Engine:
         self.abort_event.clear()
         base_name = self.get_random_name()
         run_id = str(int(time.time() * 1000))
-        run_temp_dir = os.path.join(TEMP_DIR, f"project_{run_id}")
+        run_temp_dir = os.path.join(config.temp_dir, f"project_{run_id}")
 
         os.makedirs(run_temp_dir, exist_ok=True)
-        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        os.makedirs(config.output_dir, exist_ok=True)
 
-        output_file = os.path.join(OUTPUT_DIR, f"{base_name}.mp4")
+        output_file = os.path.join(config.output_dir, f"{base_name}.mp4")
         counter = 1
 
         while os.path.exists(output_file):
-            output_file = os.path.join(OUTPUT_DIR, f"{base_name}_{counter}.mp4")
+            output_file = os.path.join(config.output_dir, f"{base_name}_{counter}.mp4")
             counter += 1
 
         app.log("Fetching stream duration...", "class:info")
         total_duration = 0.0
 
-        if requires_ytdlp(stream_url):
-            stream_url, total_duration = resolve_with_ytdlp(stream_url)
+        if self.requires_ytdlp(stream_url):
+            stream_url, total_duration = self.resolve_with_ytdlp(stream_url)
         else:
             total_duration = self.get_stream_duration(stream_url)
 
@@ -300,7 +300,7 @@ class Engine:
             return url, 0.0
 
     def run_cancellable_command(self, command):
-        if abort_event.is_set():
+        if self.abort_event.is_set():
             return CommandResult(-1, "", "Aborted by user.")
 
         with self.process_lock:
