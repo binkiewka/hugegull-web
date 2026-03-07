@@ -76,8 +76,8 @@ def get_random_name():
     return str(int(time.time()))
 
 
-def resolve_youtube(url):
-    print("Resolving YouTube URL via yt-dlp...")
+def resolve_with_ytdlp(url):
+    print("Resolving URL via yt-dlp...")
 
     command = [
         "yt-dlp",
@@ -90,7 +90,7 @@ def resolve_youtube(url):
     result = subprocess.run(command, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print("Error resolving YouTube URL. yt-dlp output:")
+        print("Error resolving URL. yt-dlp output:")
         print(result.stderr)
         return url, 0.0
 
@@ -103,9 +103,12 @@ def resolve_youtube(url):
                 duration = float(metadata["duration"])
 
         if "requested_formats" in metadata:
-            v_url = metadata["requested_formats"][0]["url"]
-            a_url = metadata["requested_formats"][1]["url"]
-            return {"video": v_url, "audio": a_url}, duration
+            if len(metadata["requested_formats"]) >= 2:
+                v_url = metadata["requested_formats"][0]["url"]
+                a_url = metadata["requested_formats"][1]["url"]
+                return {"video": v_url, "audio": a_url}, duration
+            else:
+                return {"video": metadata["requested_formats"][0]["url"], "audio": None}, duration
         else:
             return {"video": metadata.get("url"), "audio": None}, duration
 
@@ -283,9 +286,9 @@ def is_url(s):
     return s.startswith(("http", "https"))
 
 
-def is_youtube(s):
+def requires_ytdlp(s):
     if is_url(s):
-        if ("youtube.com" in s) or ("youtu.be" in s):
+        if "youtube.com" in s or "youtu.be" in s or "twitch.tv" in s:
             return True
 
     return False
@@ -334,8 +337,8 @@ def main():
     print("Fetching stream duration...")
     total_duration = 0.0
 
-    if is_youtube(stream_url):
-        stream_url, total_duration = resolve_youtube(stream_url)
+    if requires_ytdlp(stream_url):
+        stream_url, total_duration = resolve_with_ytdlp(stream_url)
     else:
         total_duration = get_stream_duration(stream_url)
 
