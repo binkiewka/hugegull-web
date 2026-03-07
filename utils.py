@@ -54,5 +54,15 @@ class Utils:
     def is_url(self, s):
         return s.startswith(("http", "https"))
 
+    def open_file_manager(self, path):
+        if not os.path.exists(path):
+            return
+
+        subprocess.Popen(
+            ["xdg-open", path],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
 
 utils = Utils()

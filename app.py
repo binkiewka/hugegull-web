@@ -30,6 +30,7 @@ class App:
         self.start_button = Button("Start", handler=self.start_clicked)
         self.abort_button = Button("Abort", handler=self.abort_clicked)
         self.clear_button = Button("Clear", handler=self.clear_clicked)
+        self.clear_button = Button("Open", handler=self.open_clicked)
         self.exit_button = Button("Exit", handler=self.exit_clicked)
 
         # Adding a dummy Window() at the end acts as a spacer to consume the rest of the empty space
@@ -104,6 +105,9 @@ class App:
     def clear_clicked(self):
         self.log_lines.clear()
         get_app().invalidate()
+
+    def open_clicked(self):
+        utils.open_file_manager(config.output_dir)
 
     def paste_clicked(self):
         clip_text = utils.get_clipboard_text()
