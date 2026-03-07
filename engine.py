@@ -342,7 +342,7 @@ class Engine:
                 self.is_running = False
 
     def notify_done(self):
-        title = f"🤯 hugegull"
+        title = "🤯 HugeGull"
         message = "Video Complete"
 
         try:
