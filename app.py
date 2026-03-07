@@ -122,7 +122,7 @@ class App:
         self.start_clicked()
         return True
 
-    def run(self):
+    def start(self):
         return self.app.run()
 
     def log(self, text, style="class:info"):
