@@ -130,6 +130,9 @@ class Engine:
         total_sections = len(sections)
         is_split_stream = False
 
+        # You could add this to your config file later
+        fade_duration = 0.5
+
         if self.data:
             if self.data.get("audio") is not None:
                 is_split_stream = True
@@ -145,18 +148,28 @@ class Engine:
             duration = section["duration"]
             name = os.path.join(config.project_dir, f"temp_clip_{i + 1}.mp4")
 
-            # The fast-seek syntax (-ss before -i) works perfectly for local files too
             command = ["ffmpeg", "-ss", str(start), "-i", v_data]
 
             if is_split_stream:
                 command.extend(["-ss", str(start), "-i", self.data["audio"]])
+
+            # Calculate when the fade out should start
+            fade_out_start = duration - fade_duration
+
+            # Revert the video filter back to just the framerate
+            vf_filter = f"fps={config.fps}"
+
+            # Keep the audio fade in and out
+            af_filter = f"afade=t=in:st=0:d={fade_duration},afade=t=out:st={fade_out_start}:d={fade_duration}"
 
             command.extend(
                 [
                     "-t",
                     str(duration),
                     "-vf",
-                    f"fps={config.fps}",
+                    vf_filter,
+                    "-af",
+                    af_filter,
                     "-c:v",
                     "libx264",
                     "-crf",
