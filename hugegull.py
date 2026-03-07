@@ -170,7 +170,7 @@ def generate_random_clips(stream_data, total_duration, run_temp_dir):
         start_time = section["start"]
         current_clip_duration = section["duration"]
 
-        output_name = os.path.join(run_temp_dir, f"temp_clip_{i}.mp4")
+        output_name = os.path.join(run_temp_dir, f"temp_clip_{i + 1}.mp4")
 
         command = ["ffmpeg", "-ss", str(start_time), "-i", v_url]
 
