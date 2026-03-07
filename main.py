@@ -13,10 +13,10 @@ def main():
         sys.exit(1)
 
     engine.start()
-    notify_done("Video Complete")
+    notify("Video Complete")
 
 
-def notify_done(message):
+def notify(message):
     title = "🤯 hugegull"
 
     try:
