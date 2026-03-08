@@ -365,12 +365,13 @@ def main():
     
     parser = argparse.ArgumentParser(description="HugeGull Web UI")
     parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
-    parser.add_argument("--port", type=int, default=8080, help="Port to bind to")
+    parser.add_argument("--port", type=int, default=28472, help="Port to bind to")
     parser.add_argument("--reload", action="store_true", help="Enable auto-reload")
     args = parser.parse_args()
     
     print(f"🚀 Starting HugeGull Web UI...")
     print(f"   Open http://localhost:{args.port} in your browser")
+    print(f"   Or: hugegull-web --port <number> to use a different port")
     print(f"   Press Ctrl+C to stop")
     
     uvicorn.run(
