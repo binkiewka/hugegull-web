@@ -112,6 +112,21 @@ class HugeGullUI {
                 document.getElementById('helpModal').style.display = 'none';
             }
         });
+
+        // Custom presets logic
+        document.getElementById('savePresetBtn').addEventListener('click', () => this.saveCustomPreset());
+        document.getElementById('deletePresetBtn').addEventListener('click', () => this.deleteCustomPreset());
+        document.getElementById('applyPresetBtn').addEventListener('click', () => {
+            const select = document.getElementById('customPresetSelect');
+            if (select && select.value) {
+                this.applyCustomPreset(select.value);
+            }
+        });
+        document.getElementById('customPresetSelect').addEventListener('change', (e) => {
+            const hasValue = (e.target.value !== "");
+            document.getElementById('applyPresetBtn').style.display = hasValue ? 'flex' : 'none';
+            document.getElementById('deletePresetBtn').style.display = hasValue ? 'flex' : 'none';
+        });
     }
 
     applyPreset(presetName) {
@@ -129,19 +144,7 @@ class HugeGullUI {
         document.getElementById('minClip').value = preset.minClip;
         document.getElementById('maxClip').value = preset.maxClip;
         document.getElementById('aspectRatio').value = preset.aspectRatio;
-        // Apply settings
-        document.getElementById('duration').value = preset.duration;
-        document.getElementById('fps').value = preset.fps;
-        document.getElementById('crf').value = preset.crf;
-        document.getElementById('minClip').value = preset.minClip;
-        document.getElementById('maxClip').value = preset.maxClip;
-        document.getElementById('aspectRatio').value = preset.aspectRatio;
         document.getElementById('outputFormat').value = preset.outputFormat;
-        
-        // Custom presets
-        document.getElementById('savePresetBtn').addEventListener('click', () => this.saveCustomPreset());
-        document.getElementById('deletePresetBtn').addEventListener('click', () => this.deleteCustomPreset());
-        document.getElementById('customPresetSelect').addEventListener('change', (e) => this.applyCustomPreset(e.target.value));
         
         // Open Advanced Settings
         document.getElementById('advancedSettings').style.display = 'block';
@@ -202,7 +205,8 @@ class HugeGullUI {
         
         this.updateCustomPresetDropdown();
         document.getElementById('customPresetSelect').value = cleanName;
-        document.getElementById('deletePresetBtn').style.display = 'inline-block';
+        document.getElementById('deletePresetBtn').style.display = 'flex';
+        document.getElementById('applyPresetBtn').style.display = 'flex';
     }
 
     deleteCustomPreset() {
@@ -217,6 +221,7 @@ class HugeGullUI {
             this.updateCustomPresetDropdown();
             select.value = "";
             document.getElementById('deletePresetBtn').style.display = 'none';
+            document.getElementById('applyPresetBtn').style.display = 'none';
         }
     }
 
@@ -224,14 +229,11 @@ class HugeGullUI {
         document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
         
         if (!presetName || presetName === "") {
-            document.getElementById('deletePresetBtn').style.display = 'none';
             return;
         }
 
         const preset = this.customPresets[presetName];
         if (!preset) return;
-
-        document.getElementById('deletePresetBtn').style.display = 'inline-block';
 
         // Apply settings mapping backend keys to UI inputs
         document.getElementById('duration').value = preset.duration;
