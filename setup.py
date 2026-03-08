@@ -11,9 +11,9 @@ setup(
     include_package_data=True,
     entry_points={
         "console_scripts": [
-            "hugegull = main:main",
-            "hugegull-web = webui:main",
-            "hugegull-setup = setup_wizard:main",
+            "hugegull-web = main:main",
+            "hugegull-web-ui = webui:main",
+            "hugegull-web-setup = setup_wizard:main",
         ],
     },
     install_requires=[

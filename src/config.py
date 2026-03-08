@@ -20,7 +20,7 @@ class Config:
         self.avg_clip_duration = 6.0
         self.max_clip_duration = 9.0
         self.path = os.path.dirname(os.path.abspath(__file__))
-        self.info_name = "hugegull"
+        self.info_name = "hugegull-web"
         self.info_version = "0.0.0"
         self.open = False
         self.fade = 0.03
@@ -45,7 +45,7 @@ class Config:
 
         self.read_args()
 
-        self.config_file = self.config or "~/.config/hugegull/config.toml"
+        self.config_file = self.config or "~/.config/hugegull-web/config.toml"
         self.config_path = os.path.expanduser(self.config_file)
         self.config_dir = os.path.dirname(self.config_path)
 

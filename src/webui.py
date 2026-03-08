@@ -404,7 +404,7 @@ def main():
     
     print(f"🚀 Starting HugeGull Web UI...")
     print(f"   Open http://localhost:{args.port} in your browser")
-    print(f"   Or: hugegull-web --port <number> to use a different port")
+    print(f"   Or: hugegull-web-ui --port <number> to use a different port")
     print(f"   Press Ctrl+C to stop")
     
     uvicorn.run(

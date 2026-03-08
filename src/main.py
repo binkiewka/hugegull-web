@@ -20,8 +20,8 @@ def show_info() -> None:
     msg = f"{info.name} v{info.version}"
     utils.print(msg)
     utils.print("")
-    utils.print("Usage: hugegull <url> [name] [options]")
-    utils.print("   or: hugegull --url <url> [--url <url2> ...] [--name <name>]")
+    utils.print("Usage: hugegull-web <url> [name] [options]")
+    utils.print("   or: hugegull-web --url <url> [--url <url2> ...] [--name <name>]")
     utils.print("")
     utils.print("Environment variables:")
     utils.print("  HUGE_URL    - Default video URL")
@@ -53,13 +53,13 @@ def show_info() -> None:
     utils.print("  --format <ext>           - Output format: mp4, webm, mov")
     utils.print("")
     utils.print("Web UI:")
-    utils.print("  hugegull-web             - Start web interface")
+    utils.print("  hugegull-web-ui          - Start web interface")
     utils.print("")
     utils.print("Examples:")
-    utils.print("  hugegull https://youtube.com/watch?v=... highlights")
-    utils.print("  hugegull stream.m3u8 --scene-detection --skip-start 30")
-    utils.print("  hugegull vid.mp4 --preview  # See what would be extracted")
-    utils.print("  hugegull <url> --aspect-ratio 9:16 --format mp4")
+    utils.print("  hugegull-web https://youtube.com/watch?v=... highlights")
+    utils.print("  hugegull-web stream.m3u8 --scene-detection --skip-start 30")
+    utils.print("  hugegull-web vid.mp4 --preview  # See what would be extracted")
+    utils.print("  hugegull-web <url> --aspect-ratio 9:16 --format mp4")
 
 
 def main() -> None:

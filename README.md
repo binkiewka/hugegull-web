@@ -22,11 +22,11 @@ Generate smart clip compilations from video streams.
 
 ```bash
 # Install with web UI support
-pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
-pipx inject hugegull fastapi uvicorn websockets python-multipart aiofiles
+pipx install git+https://github.com/binkiewka/hugegull-web.git --force
+pipx inject hugegull-web fastapi uvicorn websockets python-multipart aiofiles
 
 # Run setup wizard
-hugegull-setup
+hugegull-web-setup
 ```
 
 The setup wizard will help you configure:
@@ -39,13 +39,13 @@ The setup wizard will help you configure:
 
 ```bash
 # Install with all features (including web UI)
-pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
+pipx install git+https://github.com/binkiewka/hugegull-web.git --force
 ```
 
 Or clone and install:
 ```bash
-git clone -b feature/web-ui https://github.com/binkiewka/hugegull.git
-cd hugegull
+git clone https://github.com/binkiewka/hugegull-web.git
+cd hugegull-web
 pip install -e .
 ```
 
@@ -55,30 +55,30 @@ pip install -e .
 
 ```bash
 # Basic usage
-hugegull https://youtube.com/watch?v=... highlights
+hugegull-web https://youtube.com/watch?v=... highlights
 
 # With scene detection (smart cuts)
-hugegull https://youtube.com/watch?v=... --scene-detection
+hugegull-web https://youtube.com/watch?v=... --scene-detection
 
 # Preview mode (see what clips will be extracted)
-hugegull https://youtube.com/watch?v=... --preview
+hugegull-web https://youtube.com/watch?v=... --preview
 
 # Skip intro and outro
-hugegull stream.m3u8 --skip-start 30 --skip-end 60
+hugegull-web stream.m3u8 --skip-start 30 --skip-end 60
 
 # Vertical video for TikTok/Shorts
-hugegull https://youtube.com/watch?v=... --aspect-ratio 9:16
+hugegull-web https://youtube.com/watch?v=... --aspect-ratio 9:16
 
 # Resume interrupted job
-hugegull https://youtube.com/watch?v=... --resume
+hugegull-web https://youtube.com/watch?v=... --resume
 ```
 
 ### Web UI
 
 ```bash
-hugegull-web
+hugegull-web-ui
 # Open http://localhost:28472 in your browser
-# Or: hugegull-web --port 8080 to use a different port
+# Or: hugegull-web-ui --port 8080 to use a different port
 ```
 
 The web UI includes:
@@ -93,16 +93,16 @@ The web UI includes:
 ```bash
 export HUGE_URL="https://stream.m3u8"
 export HUGE_NAME="my_video"
-hugegull  # Uses env vars
+hugegull-web  # Uses env vars
 ```
 
 ## ⚙️ Configuration
 
-Edit `~/.config/hugegull/config.toml`:
+Edit `~/.config/hugegull-web/config.toml`:
 
 ```toml
 # Output settings
-path = "/home/user/Videos/hugegull"
+path = "/home/user/Videos/hugegull-web"
 duration = 45
 fps = 30
 crf = 28  # Quality: 18-35 (lower = better)
@@ -157,32 +157,32 @@ Output options:
   --format <ext>           mp4, webm, mov
 
 Web UI:
-  hugegull-web             Start web interface
+  hugegull-web-ui          Start web interface
   
 Setup:
-  hugegull-setup           Run interactive setup wizard
+  hugegull-web-setup       Run interactive setup wizard
 ```
 
 ## 🎯 Examples
 
 ### YouTube Highlights
 ```bash
-hugegull https://youtube.com/watch?v=... --scene-detection --duration 60
+hugegull-web https://youtube.com/watch?v=... --scene-detection --duration 60
 ```
 
 ### TikTok/Shorts Compilation
 ```bash
-hugegull https://youtube.com/watch?v=... --aspect-ratio 9:16 --duration 30
+hugegull-web https://youtube.com/watch?v=... --aspect-ratio 9:16 --duration 30
 ```
 
 ### Stream Highlights (Skip intro)
 ```bash
-hugegull https://twitch.tv/videos/... --skip-start 120 --scene-detection
+hugegull-web https://twitch.tv/videos/... --skip-start 120 --scene-detection
 ```
 
 ### Batch Processing with Web UI
 ```bash
-hugegull-web
+hugegull-web-ui
 # Open browser, paste multiple URLs, queue them up
 ```
 

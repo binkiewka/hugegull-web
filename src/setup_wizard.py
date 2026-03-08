@@ -198,7 +198,7 @@ def run_setup() -> None:
     # Step 2: Output directory
     print_step(2, 5, "Configure output location")
     
-    default_path = os.path.expanduser("~/Videos/hugegull")
+    default_path = os.path.expanduser("~/Videos/hugegull-web")
     output_path = ask_input("Where should videos be saved?", default_path)
     output_path = os.path.expanduser(output_path)
     
@@ -268,7 +268,7 @@ fade = 0.03
 '''
     
     # Write config
-    config_dir = os.path.expanduser("~/.config/hugegull")
+    config_dir = os.path.expanduser("~/.config/hugegull-web")
     config_path = os.path.join(config_dir, "config.toml")
     
     os.makedirs(config_dir, exist_ok=True)
@@ -280,19 +280,19 @@ fade = 0.03
     
     print(f"{Colors.GREEN}Configuration saved to:{Colors.END} {config_path}")
     print(f"\n{Colors.CYAN}You can now use HugeGull:{Colors.END}")
-    print(f"  CLI:   hugegull <url> [name]")
-    print(f"  Web:   hugegull-web")
+    print(f"  CLI:   hugegull-web <url> [name]")
+    print(f"  Web:   hugegull-web-ui")
     print(f"\n{Colors.YELLOW}Edit {config_path} anytime to change settings.{Colors.END}")
     
     # Test run option
     if ask_yes_no("\nWould you like to test with the web UI now?", False):
         print(f"\n{Colors.CYAN}Starting web UI...{Colors.END}")
-        os.system("hugegull-web")
+        os.system("hugegull-web-ui")
 
 
 def check_existing_config() -> bool:
     """Check if user already has a config"""
-    config_path = os.path.expanduser("~/.config/hugegull/config.toml")
+    config_path = os.path.expanduser("~/.config/hugegull-web/config.toml")
     if os.path.exists(config_path):
         print(f"{Colors.YELLOW}Existing configuration found at:{Colors.END} {config_path}")
         return ask_yes_no("Overwrite existing configuration?", False)
