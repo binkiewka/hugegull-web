@@ -57,6 +57,7 @@ class HugeGullUI {
 
     init() {
         this.bindEvents();
+        this.loadCustomPresets();
         this.loadRecentJobs();
     }
 
@@ -137,7 +138,121 @@ class HugeGullUI {
         document.getElementById('aspectRatio').value = preset.aspectRatio;
         document.getElementById('outputFormat').value = preset.outputFormat;
         
+        // Custom presets
+        document.getElementById('savePresetBtn').addEventListener('click', () => this.saveCustomPreset());
+        document.getElementById('deletePresetBtn').addEventListener('click', () => this.deleteCustomPreset());
+        document.getElementById('customPresetSelect').addEventListener('change', (e) => this.applyCustomPreset(e.target.value));
+        
         // Open Advanced Settings
+        document.getElementById('advancedSettings').style.display = 'block';
+    }
+
+    loadCustomPresets() {
+        try {
+            const saved = localStorage.getItem('hugegull_custom_presets');
+            if (saved) {
+                this.customPresets = JSON.parse(saved);
+            } else {
+                this.customPresets = {};
+            }
+        } catch (e) {
+            this.customPresets = {};
+        }
+        this.updateCustomPresetDropdown();
+    }
+
+    updateCustomPresetDropdown() {
+        const select = document.getElementById('customPresetSelect');
+        const deleteBtn = document.getElementById('deletePresetBtn');
+        
+        // Keep the first default option
+        const defaultOption = select.options[0];
+        select.innerHTML = '';
+        select.appendChild(defaultOption);
+
+        const keys = Object.keys(this.customPresets);
+        if (keys.length === 0) {
+            select.disabled = true;
+            deleteBtn.style.display = 'none';
+        } else {
+            select.disabled = false;
+            keys.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+        }
+    }
+
+    saveCustomPreset() {
+        const name = prompt("Enter a name for this preset:");
+        if (!name || name.trim() === "") return;
+
+        const cleanName = name.trim();
+        const settings = this.getSettings();
+        
+        // Remove settings that shouldn't be saved in generic presets
+        delete settings.name;
+        delete settings.urls;
+        delete settings.resume;
+
+        this.customPresets[cleanName] = settings;
+        localStorage.setItem('hugegull_custom_presets', JSON.stringify(this.customPresets));
+        
+        this.updateCustomPresetDropdown();
+        document.getElementById('customPresetSelect').value = cleanName;
+        document.getElementById('deletePresetBtn').style.display = 'inline-block';
+    }
+
+    deleteCustomPreset() {
+        const select = document.getElementById('customPresetSelect');
+        const presetName = select.value;
+        
+        if (!presetName || presetName === "") return;
+        
+        if (confirm(`Are you sure you want to delete the preset "${presetName}"?`)) {
+            delete this.customPresets[presetName];
+            localStorage.setItem('hugegull_custom_presets', JSON.stringify(this.customPresets));
+            this.updateCustomPresetDropdown();
+            select.value = "";
+            document.getElementById('deletePresetBtn').style.display = 'none';
+        }
+    }
+
+    applyCustomPreset(presetName) {
+        document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+        
+        if (!presetName || presetName === "") {
+            document.getElementById('deletePresetBtn').style.display = 'none';
+            return;
+        }
+
+        const preset = this.customPresets[presetName];
+        if (!preset) return;
+
+        document.getElementById('deletePresetBtn').style.display = 'inline-block';
+
+        // Apply settings mapping backend keys to UI inputs
+        document.getElementById('duration').value = preset.duration;
+        document.getElementById('fps').value = preset.fps;
+        document.getElementById('crf').value = preset.crf;
+        document.getElementById('minClip').value = preset.min_clip_duration;
+        document.getElementById('maxClip').value = preset.max_clip_duration;
+        document.getElementById('aspectRatio').value = preset.aspect_ratio || '';
+        document.getElementById('outputFormat').value = preset.output_format;
+        document.getElementById('gpu').value = preset.gpu || '';
+        document.getElementById('skipStart').value = preset.skip_start || 0;
+        document.getElementById('skipEnd').value = preset.skip_end || 0;
+        
+        const sceneToggle = document.getElementById('sceneDetection');
+        sceneToggle.checked = preset.scene_detection;
+        // Trigger generic change event to update sort dropdown visibility
+        sceneToggle.dispatchEvent(new Event('change'));
+        
+        const sortSelect = document.getElementById('sortBy');
+        sortSelect.value = preset.sort_by || 'index';
+
         document.getElementById('advancedSettings').style.display = 'block';
     }
 
@@ -148,6 +263,7 @@ class HugeGullUI {
         input.className = 'url-input';
         input.placeholder = 'https://... or /path/to/video.mp4';
         container.appendChild(input);
+        input.focus();
     }
 
     clearUrls() {

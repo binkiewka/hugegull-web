@@ -51,6 +51,13 @@
                         <button type="button" class="preset-btn" data-preset="twitter">Twitter/X</button>
                         <button type="button" class="preset-btn" data-preset="default">Default</button>
                     </div>
+                <div class="custom-presets" style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+                    <label for="customPresetSelect">Custom Presets:</label>
+                    <select id="customPresetSelect" style="flex: 1;">
+                        <option value="">-- Select a custom preset --</option>
+                    </select>
+                    <button type="button" id="savePresetBtn" class="btn-secondary btn-small">💾 Save Current</button>
+                    <button type="button" id="deletePresetBtn" class="btn-secondary btn-small" style="display: none; background: #991b1b; border-color: #7f1d1d; color: white;">🗑️ Delete</button>
                 </div>
 
                 <div class="advanced-toggle">
