@@ -61,6 +61,11 @@ class JobStatus:
     clips: list[dict] = field(default_factory=list)  # For preview mode
     is_preview: bool = False
 
+    def log(self, message: str) -> None:
+        """Add a log message to progress"""
+        self.progress.append(message)
+        print(f"[{self.job_id}] {message}")
+
 
 class WebUIEngine(Engine):
     """Extended engine with progress callbacks for web UI"""
