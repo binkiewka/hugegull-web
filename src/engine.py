@@ -19,7 +19,6 @@ class Engine:
         self.clips: list[str] = []
         self.duration = 0.0
         self.workers = 8
-        self.prepare()
 
     def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
@@ -34,6 +33,7 @@ class Engine:
 
     def start(self) -> None:
         utils.info("Starting...")
+        self.prepare()
 
         if os.path.isfile(self.url):
             self.get_stream_duration()

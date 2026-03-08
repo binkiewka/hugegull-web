@@ -27,6 +27,8 @@ class Config:
 
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
+        self.config_path = os.path.expanduser("~/.config/hugegull/config.toml")
+        self.config_dir = os.path.dirname(self.config_path)
 
         self.read_args()
         self.read_file()
@@ -39,9 +41,6 @@ class Config:
         self.project_dir = os.path.join(self.temp_dir, f"project_{run_id}")
 
     def make_dirs(self) -> None:
-        self.config_path = os.path.expanduser("~/.config/hugegull/config.toml")
-        self.config_dir = os.path.dirname(self.config_path)
-
         if not os.path.exists(self.config_dir):
             os.makedirs(self.config_dir, exist_ok=True)
 
