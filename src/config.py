@@ -93,8 +93,8 @@ class Config:
         if "--name" in sys.argv:
             self.get_arg("name", "name")
 
-        if not self.url:
-            self.url = self.env_url
+        if not self.urls:
+            self.urls.append(self.env_url)
 
         if not self.name:
             self.name = self.env_name or utils.get_random_name()
