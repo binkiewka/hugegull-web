@@ -4,6 +4,7 @@ import os
 import random
 import shutil
 import time
+import urllib
 from typing import Any
 
 from engine import engine
@@ -139,27 +140,32 @@ class Stream:
         if not self.active_clips:
             return
 
-        target_duration = int(max(clip["duration"] for clip in self.active_clips) + 1)
-        start_sequence = (self.sequence - len(self.active_clips)) + 1
+        max_duration = max(clip["duration"] for clip in self.active_clips)
+        target_duration = int(max_duration) + 1
+        start_sequence = self.sequence - len(self.active_clips) + 1
 
-        # Determine the directory where the playlist lives
-        playlist_dir = os.path.dirname(self.stream_file)
+        # write to a temporary file first
+        tmp_file = self.stream_file + ".tmp"
 
-        with open(self.stream_file, "w") as f:
+        with open(tmp_file, "w") as f:
             f.write("#EXTM3U\n")
-            f.write("#EXT-X-VERSION:3\n")
+            f.write("#EXT-X-VERSION:4\n")
             f.write(f"#EXT-X-TARGETDURATION:{target_duration}\n")
             f.write(f"#EXT-X-MEDIA-SEQUENCE:{start_sequence}\n")
 
             for clip in self.active_clips:
-                # Calculate path relative to the playlist file
-                relative_path = os.path.relpath(clip["path"], playlist_dir)
-
-                # HLS specs prefer forward slashes even on Windows
-                relative_path = relative_path.replace(os.sep, "/")
-
+                f.write("#EXT-X-DISCONTINUITY\n")
                 f.write(f"#EXTINF:{clip['duration']:.6f},\n")
-                f.write(f"{relative_path}\n")
+
+                # generate a strict file:// uri
+                abs_path = os.path.abspath(clip["path"])
+                uri = urllib.request.pathname2url(abs_path)
+                file_uri = f"file://{uri}"
+
+                f.write(f"{file_uri}\n")
+
+        # atomically replace the real playlist so players never read a half-written file
+        os.replace(tmp_file, self.stream_file)
 
     def open_stream(self) -> None:
         if config.open and (not self.opened):

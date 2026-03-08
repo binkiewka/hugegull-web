@@ -65,49 +65,51 @@ class Engine:
         video_url: str,
         audio_url: str | None,
         output_path: str,
-        output_format: str | None = None,
+        output_format: str = "mpegts"
     ) -> bool:
-        command = ["ffmpeg", "-ss", str(start), "-i", video_url]
+        command = [
+            "ffmpeg",
+            "-y",
+            "-hide_banner",
+            "-loglevel", "error"
+        ]
+
+        command.extend(["-ss", str(start), "-i", video_url])
 
         if audio_url:
-            command.extend(["-ss", str(start), "-i", audio_url])
+            if audio_url != video_url:
+                command.extend(["-ss", str(start), "-i", audio_url])
 
-        fade_out_start = duration - config.fade
-        vf_filter = f"fps={config.fps}"
-        af_filter = f"afade=t=in:st=0:d={config.fade},afade=t=out:st={fade_out_start}:d={config.fade}"
+        command.extend(["-t", str(duration)])
 
-        command.extend(
-            [
-                "-t",
-                str(duration),
-                "-vf",
-                vf_filter,
-                "-af",
-                af_filter,
-                "-c:v",
-                "libx264",
-                "-crf",
-                str(config.crf),
-                "-c:a",
-                "aac",
-                "-video_track_timescale",
-                "90000",
-            ]
-        )
+        if audio_url:
+            if audio_url != video_url:
+                command.extend(["-map", "0:v:0", "-map", "1:a:0"])
+            else:
+                command.extend(["-map", "0:v:0", "-map", "0:a:0?"])
+        else:
+            command.extend(["-map", "0:v:0", "-map", "0:a:0?"])
 
-        if output_format:
-            command.extend(["-f", output_format])
+        # strictly force framerate, regenerate timestamps, and sync audio clock
+        command.extend([
+            "-c:v", "libx264",
+            "-preset", "ultrafast",
+            "-fps_mode", "cfr",
+            "-c:a", "aac",
+            "-af", "aresample=async=1",
+            "-fflags", "+genpts",
+            "-avoid_negative_ts", "make_zero",
+            "-muxdelay", "0",
+            "-f", output_format,
+            output_path
+        ])
 
-        command.extend(["-y", output_path])
-
-        result = subprocess.run(command, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            utils.error(f"Error extracting clip to {output_path}:")
-            utils.error(result.stderr)
+        try:
+            subprocess.run(command, check=True)
+            return True
+        except subprocess.CalledProcessError as e:
+            utils.info(f"FFmpeg extraction failed: {e}")
             return False
-
-        return True
 
     @staticmethod
     def get_stream_duration(url: str) -> float:
