@@ -24,11 +24,11 @@ class Stream:
 
     def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
-        os.makedirs(config.output_dir, exist_ok=True)
+        os.makedirs(config.segment_dir, exist_ok=True)
 
-        for f in os.listdir(config.output_dir):
-            if f.endswith(".ts") or f.endswith(".m3u8"):
-                os.remove(os.path.join(config.output_dir, f))
+        for f in os.listdir(config.segment_dir):
+            if f.endswith(".ts"):
+                os.remove(os.path.join(config.segment_dir, f))
 
     def start(self) -> None:
         if os.path.isfile(self.url):
@@ -103,7 +103,7 @@ class Stream:
         # Predict the next sequence and filename, but don't save it to self.sequence yet
         next_sequence = self.sequence + 1
         clip_filename = f"segment_{next_sequence}.ts"
-        clip_path = os.path.join(config.output_dir, clip_filename)
+        clip_path = os.path.join(config.segment_dir, clip_filename)
 
         video_url = self.data.get("video", self.url)
         audio_url = self.data.get("audio")
