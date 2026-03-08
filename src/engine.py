@@ -54,8 +54,8 @@ class Engine:
     def resolve_with_ytdlp(self) -> None:
         command = [
             "yt-dlp",
-            "--no-playlist",  # Skips playlist resolution
-            "--no-warnings",  # Skips printing/processing warnings
+            "--no-playlist",
+            "--no-warnings",
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
@@ -101,7 +101,6 @@ class Engine:
         duration = config.duration
         sections: list[dict[str, Any]] = []
         current_sum = 0.0
-
         end_buffer = 2.0
         safe_duration = self.duration - end_buffer
 
