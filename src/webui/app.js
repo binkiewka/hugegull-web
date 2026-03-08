@@ -166,6 +166,13 @@ class HugeGullUI {
             return;
         }
 
+        // Disable buttons and show immediate feedback
+        const generateBtn = document.getElementById('generateBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        generateBtn.disabled = true;
+        previewBtn.disabled = true;
+        generateBtn.innerHTML = '⏳ Starting...';
+
         const settings = this.getSettings();
         settings.preview = isPreview;
         settings.dry_run = isPreview;
@@ -188,15 +195,27 @@ class HugeGullUI {
             const data = await response.json();
             this.jobId = data.job_id;
 
+            // Reset buttons
+            generateBtn.disabled = false;
+            previewBtn.disabled = false;
+            generateBtn.innerHTML = '🎬 Generate Video';
+
             if (isPreview) {
                 this.showSection('previewSection');
                 this.connectWebSocket(this.jobId, true);
             } else {
                 this.showSection('progressSection');
+                // Show initial loading state
+                document.getElementById('progressText').textContent = 'Initializing...';
+                document.getElementById('logOutput').innerHTML = '<div class="log-line info">Starting job ' + this.jobId + '...</div>';
                 this.connectWebSocket(this.jobId, false);
             }
 
         } catch (err) {
+            // Re-enable buttons on error
+            generateBtn.disabled = false;
+            previewBtn.disabled = false;
+            generateBtn.innerHTML = '🎬 Generate Video';
             this.showError(err.message);
         }
     }
