@@ -222,7 +222,7 @@ class Engine:
 
             command.extend([
                 "-f",
-                "bv*[height<=1080]+ba/b[height<=1080]/bv+ba/b",
+                "bv[height<=1080][ext=mp4]+ba[ext=m4a]/bv[height<=1080]+ba/b[height<=1080]/bv+ba/b",
                 "--dump-json",
                 url,
             ])
