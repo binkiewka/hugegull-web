@@ -126,7 +126,9 @@ class Engine:
 
         return sections
 
-    def extract_single_clip(self, i: int, section: dict[str, Any], is_split_stream: bool, v_data: str) -> str | None:
+    def extract_single_clip(
+        self, i: int, section: dict[str, Any], is_split_stream: bool, v_data: str
+    ) -> str | None:
         start = section["start"]
         duration = section["duration"]
         name = os.path.join(config.project_dir, f"temp_clip_{i + 1}.mp4")
@@ -198,12 +200,9 @@ class Engine:
 
             for i in range(len(sections)):
                 future = executor.submit(
-                    self.extract_single_clip,
-                    i,
-                    sections[i],
-                    is_split_stream,
-                    v_data
+                    self.extract_single_clip, i, sections[i], is_split_stream, v_data
                 )
+
                 futures.append(future)
 
             for future in concurrent.futures.as_completed(futures):
@@ -214,7 +213,9 @@ class Engine:
 
         # Sort clips to ensure they concatenate in the original generated order
         # since multithreading completes them out of order
-        self.clips.sort(key=lambda x: int(os.path.basename(x).split('_')[2].split('.')[0]))
+        self.clips.sort(
+            key=lambda x: int(os.path.basename(x).split("_")[2].split(".")[0])
+        )
 
     def concatenate_clips(self) -> None:
         if not self.clips:
