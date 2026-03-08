@@ -19,7 +19,7 @@ class StreamEngine:
         self.duration = 0.0
         self.active_clips: list[dict[str, Any]] = []
         self.sequence = 0
-        self.m3u8_file = os.path.join(config.output_dir, "stream.m3u8")
+        self.stream_file = os.path.join(config.output_dir, "stream.m3u8")
         self.prepare()
 
     def prepare(self) -> None:
@@ -47,7 +47,7 @@ class StreamEngine:
         self.stream_loop()
 
     def stream_loop(self) -> None:
-        utils.info(f"Starting continuous generation. Playlist at: {self.m3u8_file}")
+        utils.info(f"Starting continuous generation. Playlist at: {self.stream_file}")
 
         while len(self.active_clips) < config.buffer:
             self.generate_and_append_clip()
@@ -121,7 +121,7 @@ class StreamEngine:
         target_duration = int(max(clip["duration"] for clip in self.active_clips) + 1)
         start_sequence = (self.sequence - len(self.active_clips)) + 1
 
-        with open(self.m3u8_file, "w") as f:
+        with open(self.stream_file, "w") as f:
             f.write("#EXTM3U\n")
             f.write("#EXT-X-VERSION:3\n")
             f.write(f"#EXT-X-TARGETDURATION:{target_duration}\n")
