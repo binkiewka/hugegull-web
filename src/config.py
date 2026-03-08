@@ -25,11 +25,15 @@ class Config:
         self.fade = 0.03
         self.gpu = ""
 
+        prepare()
+
+    def prepare() -> None:
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
 
         self.read_args()
         self.read_file()
+        self.make_dirs()
 
         self.temp_dir = os.path.join(self.path, "temp")
         self.output_dir = os.path.join(self.path, "output")

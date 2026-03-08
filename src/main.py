@@ -31,11 +31,12 @@ def main() -> None:
         show_info()
         sys.exit(0)
 
+    config.prepare()
+
     if not config.url:
         show_info()
         sys.exit(1)
 
-    config.make_dirs()
     start_time = time.perf_counter()
     engine.start()
     end_time = time.perf_counter()
