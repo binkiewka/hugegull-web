@@ -238,25 +238,17 @@ class Engine:
         if is_local_file:
             # Local files can be read extremely fast, so max out the CPU/GPU
             max_workers = min(len(sections), os.cpu_count() or 4)
-
-            utils.info(
-                f"Local file detected. Extracting clips with {max_workers} parallel workers..."
-            )
         else:
             # Remote streams will choke a bad network if we use too many workers
             # Throttling to 1 or 2 prevents bandwidth fighting
             max_workers = 2
-
-            utils.info(
-                f"Remote stream detected. Throttling to {max_workers} parallel workers to save bandwidth..."
-            )
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = []
 
             for i in range(len(sections)):
                 future = executor.submit(
-                    self._extract_single_clip, i, sections[i], is_split_stream, v_data
+                    self.extract_single_clip, i, sections[i], is_split_stream, v_data
                 )
 
                 futures.append(future)
