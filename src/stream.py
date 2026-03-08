@@ -62,12 +62,14 @@ class Stream:
 
             if len(self.active_clips) > config.buffer:
                 oldest_clip = self.active_clips.pop(0)
+
                 try:
                     os.remove(oldest_clip["path"])
                 except OSError:
                     pass
 
             self.update_playlist()
+            self.open_stream()
 
             # Pace the loop to match real-time playback
             if clip_duration:
@@ -140,6 +142,9 @@ class Stream:
         target_duration = int(max(clip["duration"] for clip in self.active_clips) + 1)
         start_sequence = (self.sequence - len(self.active_clips)) + 1
 
+        # Determine the directory where the playlist lives
+        playlist_dir = os.path.dirname(self.stream_file)
+
         with open(self.stream_file, "w") as f:
             f.write("#EXTM3U\n")
             f.write("#EXT-X-VERSION:3\n")
@@ -147,12 +152,19 @@ class Stream:
             f.write(f"#EXT-X-MEDIA-SEQUENCE:{start_sequence}\n")
 
             for clip in self.active_clips:
-                f.write(f"#EXTINF:{clip['duration']:.6f},\n")
-                f.write(f"{clip['filename']}\n")
+                # Calculate path relative to the playlist file
+                relative_path = os.path.relpath(clip["path"], playlist_dir)
 
-            if config.open and (not self.opened):
-                utils.open_file(self.stream_file)
-                self.opened = True
+                # HLS specs prefer forward slashes even on Windows
+                relative_path = relative_path.replace(os.sep, "/")
+
+                f.write(f"#EXTINF:{clip['duration']:.6f},\n")
+                f.write(f"{relative_path}\n")
+
+    def open_stream(self) -> None:
+        if config.open and (not self.opened):
+            utils.open_file(self.stream_file)
+            self.opened = True
 
 
 stream = Stream()

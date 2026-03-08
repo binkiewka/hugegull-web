@@ -35,7 +35,7 @@ class Config:
 
         self.temp_dir = os.path.join(self.path, "temp")
         self.output_dir = os.path.join(self.path, "output")
-        self.segment_dir = os.path.join(self.path, "segment")
+        self.segment_dir = os.path.join(self.path, "segments")
 
         run_id = str(int(time.time() * 1000))
         self.project_dir = os.path.join(self.temp_dir, f"project_{run_id}")
