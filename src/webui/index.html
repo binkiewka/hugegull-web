@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HugeGull - Video Clip Generator</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🐦 HugeGull</h1>
+            <p>Generate random clip compilations from video streams</p>
+        </header>
+
+        <main>
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="form-group">
+                    <label for="url">Video URL</label>
+                    <input type="text" id="url" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />
+                    <small>Supports YouTube, Twitch, local files, and HLS streams</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="name">Output Name (optional)</label>
+                    <input type="text" id="name" placeholder="Leave empty for random name" />
+                </div>
+
+                <div class="advanced-toggle">
+                    <button type="button" id="toggleAdvanced">⚙️ Advanced Settings</button>
+                </div>
+
+                <!-- Advanced Settings -->
+                <div class="advanced-settings" id="advancedSettings" style="display: none;">
+                    <div class="settings-grid">
+                        <div class="form-group">
+                            <label for="duration">Total Duration (seconds)</label>
+                            <input type="number" id="duration" value="45" min="5" max="300" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fps">FPS</label>
+                            <input type="number" id="fps" value="30" min="15" max="60" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="crf">Quality (CRF)</label>
+                            <input type="number" id="crf" value="28" min="18" max="35" />
+                            <small>Lower = better quality, larger file</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="minClip">Min Clip Duration</label>
+                            <input type="number" id="minClip" value="3" min="1" max="30" step="0.5" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maxClip">Max Clip Duration</label>
+                            <input type="number" id="maxClip" value="9" min="1" max="60" step="0.5" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gpu">GPU Encoding</label>
+                            <select id="gpu">
+                                <option value="">CPU (software)</option>
+                                <option value="nvidia">NVIDIA (NVENC)</option>
+                                <option value="amd">AMD (VAAPI)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" id="generateBtn" class="btn-primary">
+                    🎬 Generate Video
+                </button>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <h2>⏳ Generating...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="log-output" id="logOutput"></div>
+            </section>
+
+            <!-- Result Section -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <h2>✅ Complete!</h2>
+                <div class="result-actions">
+                    <a id="downloadBtn" href="#" class="btn-primary" download>
+                        ⬇️ Download Video
+                    </a>
+                    <button type="button" id="newVideoBtn" class="btn-secondary">
+                        🔄 Generate Another
+                    </button>
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <h2>❌ Error</h2>
+                <p id="errorMessage"></p>
+                <button type="button" id="retryBtn" class="btn-secondary">
+                    🔄 Try Again
+                </button>
+            </section>
+
+            <!-- Recent Jobs -->
+            <section class="recent-jobs">
+                <h2>📋 Recent Jobs</h2>
+                <div id="jobsList" class="jobs-list">
+                    <p class="empty">No jobs yet</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>HugeGull v<span id="version">1.0</span> — 
+               <a href="https://github.com/binkiewka/hugegull" target="_blank">GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
