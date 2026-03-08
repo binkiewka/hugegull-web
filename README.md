@@ -1,6 +1,8 @@
-![](seagulls.jpg)
+![](dashboard.jpg)
 
 # HugeGull
+
+*A fork of [madprops/hugegull](https://github.com/madprops/hugegull) featuring a Web UI and enhancements.*
 
 Generate smart clip compilations from video streams.
 
