@@ -60,6 +60,7 @@ class JobStatus:
     completed_clips: int = 0
     clips: list[dict] = field(default_factory=list)  # For preview mode
     is_preview: bool = False
+    progress_percent: float = 0.0
 
     def log(self, message: str) -> None:
         """Add a log message to progress"""
@@ -80,6 +81,13 @@ class WebUIEngine(Engine):
         if self.job_id in jobs:
             jobs[self.job_id].progress.append(message)
         print(f"[{self.job_id}] {message}")
+
+    def log_progress(self, message: str, percent: float) -> None:
+        """Log progress with percentage"""
+        if self.job_id in jobs:
+            jobs[self.job_id].progress.append(f"{message} ({percent:.1f}%)")
+            jobs[self.job_id].progress_percent = percent
+        print(f"[{self.job_id}] {message} ({percent:.1f}%)")
     
     def save_state(self) -> None:
         """Save state and update job progress"""
@@ -220,6 +228,7 @@ async def get_all_jobs():
         "completed_at": j.completed_at,
         "total_clips": j.total_clips,
         "completed_clips": j.completed_clips,
+        "progress_percent": j.progress_percent,
         "is_preview": j.is_preview,
     } for job_id, j in jobs.items()}
 
@@ -244,6 +253,7 @@ async def get_job_status(job_id: str):
         "completed_at": job.completed_at,
         "total_clips": job.total_clips,
         "completed_clips": job.completed_clips,
+        "progress_percent": job.progress_percent,
         "clips": job.clips,
         "is_preview": job.is_preview,
     }

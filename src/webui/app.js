@@ -284,7 +284,22 @@ class HugeGullUI {
         }
 
         // Update progress stats
-        if (data.total_clips && data.completed_clips !== undefined) {
+        if (data.progress_percent !== undefined && data.progress_percent > 0) {
+            // Priority to real-time progress percentages (e.g., during scene scanning)
+            const percent = Math.round(data.progress_percent);
+            
+            // If we're processing clips, also show the clip count text
+            if (data.total_clips && data.completed_clips !== undefined && data.total_clips > 0) {
+                progressText.textContent = `Clip ${data.completed_clips} of ${data.total_clips}`;
+            } else {
+                progressText.textContent = `Analyzing & Processing...`;
+            }
+            
+            progressPercent.textContent = `${percent}%`;
+            this.updateProgress(percent);
+            
+        } else if (data.total_clips && data.completed_clips !== undefined && data.total_clips > 0) {
+            // Fallback to legacy total_clips ratio
             progressText.textContent = `Clip ${data.completed_clips} of ${data.total_clips}`;
             const percent = Math.round((data.completed_clips / data.total_clips) * 100);
             progressPercent.textContent = `${percent}%`;

@@ -45,6 +45,10 @@ class Engine:
         """Log an error. Can be overridden by subclasses"""
         utils.error(message)
 
+    def log_progress(self, message: str, percent: float) -> None:
+        """Log a message with a progress percentage. Can be overridden."""
+        utils.info(f"{message} ({percent:.1f}%)")
+
     def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
         os.makedirs(config.output_dir, exist_ok=True)
@@ -318,10 +322,22 @@ class Engine:
             v_data
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True)
+        self.log_progress("Starting keyframe analysis", 0.0)
+
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            universal_newlines=True
+        )
 
         keyframes = []
-        for line in result.stdout.strip().split("\n"):
+        last_log_time = time.time()
+        
+        for line in process.stdout:
+            line = line.strip()
             if line:
                 try:
                     timestamp = float(line)
@@ -329,8 +345,20 @@ class Engine:
                     if timestamp < start_offset or timestamp > duration - end_offset:
                         continue
                     keyframes.append(timestamp)
+
+                    # Update progress every ~1 second max to avoid spam
+                    current_time = time.time()
+                    if current_time - last_log_time >= 1.0:
+                        percent = min(99.0, (timestamp / duration) * 100)
+                        self.log_progress("Analyzing keyframes...", percent)
+                        last_log_time = current_time
+                        
                 except ValueError:
                     continue
+
+        process.wait()
+
+        self.log_progress("Analysis complete", 100.0)
 
         if len(keyframes) < 10:
             # Not enough keyframes, fall back to random
@@ -410,14 +438,34 @@ class Engine:
             "-",
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True)
+        self.log_progress("Detecting full scenes", 0.0)
+
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1,
+            universal_newlines=True
+        )
 
         scenes = []
-        for line in result.stderr.split("\n"):
+        last_log_time = time.time()
+
+        for line in process.stderr:
             if "pts_time:" in line:
                 try:
                     time_str = line.split("pts_time:")[1].split()[0]
                     timestamp = float(time_str) + start_offset
+
+                    # Calculate progress relative to the analyzed window
+                    current_time = time.time()
+                    if current_time - last_log_time >= 1.0:
+                        analyzed_duration = timestamp - start_offset
+                        total_analysis = duration - start_offset - end_offset
+                        percent = min(99.0, (analyzed_duration / total_analysis) * 100)
+                        self.log_progress("Scanning full video scenes...", percent)
+                        last_log_time = current_time
 
                     if timestamp < start_offset or timestamp > duration - end_offset:
                         continue
@@ -426,9 +474,13 @@ class Engine:
                         scenes.append(timestamp)
 
                     if len(scenes) >= 50:
+                        process.terminate()  # We have enough, stop parsing
                         break
                 except (IndexError, ValueError):
                     continue
+
+        process.wait()
+        self.log_progress("Analysis complete", 100.0)
 
         return sorted(scenes)
 
