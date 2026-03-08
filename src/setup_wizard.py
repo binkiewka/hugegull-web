@@ -282,7 +282,7 @@ fade = 0.03
     print(f"\n{Colors.CYAN}You can now use HugeGull:{Colors.END}")
     print(f"  CLI:   hugegull <url> [name]")
     print(f"  Web:   hugegull-web")
-    print(f"\n{Colors.YELLOW}Edit {config_path} anytime to change settings.{Colors.End}")
+    print(f"\n{Colors.YELLOW}Edit {config_path} anytime to change settings.{Colors.END}")
     
     # Test run option
     if ask_yes_no("\nWould you like to test with the web UI now?", False):
