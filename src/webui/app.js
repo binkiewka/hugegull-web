@@ -5,6 +5,10 @@ class HugeGullUI {
         this.jobId = null;
         this.ws = null;
         this.jobs = [];
+        this.batchTotal = 1;
+        this.batchCurrent = 1;
+        this.batchResults = [];
+        this.forceResume = false;
         this.presets = {
             youtube: {
                 duration: 45,
@@ -303,50 +307,69 @@ class HugeGullUI {
 
     async startGeneration() {
         const urls = this.getUrls();
-        const name = document.getElementById('name').value.trim();
-
         if (urls.length === 0) {
             alert('Please enter at least one video URL');
             return;
         }
 
-        // Disable buttons and show immediate feedback
+        const countInput = document.getElementById('jobCount');
+        this.batchTotal = countInput ? (parseInt(countInput.value) || 1) : 1;
+        this.batchCurrent = 1;
+        this.batchResults = [];
+
+        // Disable button during entire batch
         const generateBtn = document.getElementById('generateBtn');
         generateBtn.disabled = true;
-        generateBtn.innerHTML = '⏳ Starting...';
+        generateBtn.innerHTML = this.batchTotal > 1 ? `⏳ Starting Batch (1/${this.batchTotal})...` : '⏳ Starting...';
 
+        this.showSection('progressSection');
+        document.getElementById('progressText').textContent = 'Initializing...';
+        document.getElementById('logOutput').innerHTML = '<div class="log-line info">Starting...</div>';
+
+        this.triggerNextJob();
+    }
+
+    async triggerNextJob() {
+        const urls = this.getUrls();
+        const rawName = document.getElementById('name').value.trim();
+        const name = rawName ? (this.batchTotal > 1 ? `${rawName}_${this.batchCurrent}` : rawName) : undefined;
+        
         const settings = this.getSettings();
+        if (this.forceResume) {
+            settings.resume = true;
+            this.forceResume = false;
+        }
+        
+        const generateBtn = document.getElementById('generateBtn');
+        if (this.batchTotal > 1) {
+            generateBtn.innerHTML = `⏳ Processing ${this.batchCurrent}/${this.batchTotal}...`;
+        }
 
         try {
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    urls: urls,  // Send array of URLs
-                    name: name || undefined,
+                    urls: urls,
+                    name: name,
                     settings
                 })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to start generation');
+                throw new Error(`Failed to start generation for job ${this.batchCurrent}`);
             }
 
             const data = await response.json();
             this.jobId = data.job_id;
-
-            // Reset buttons
-            generateBtn.disabled = false;
-            generateBtn.innerHTML = '🎬 Generate Video';
-
-            this.showSection('progressSection');
-            // Show initial loading state
-            document.getElementById('progressText').textContent = 'Initializing...';
-            document.getElementById('logOutput').innerHTML = '<div class="log-line info">Starting job ' + this.jobId + '...</div>';
+            
+            const logOutput = document.getElementById('logOutput');
+            logOutput.innerHTML += `<div class="log-line info">Started job ${this.jobId} (Batch ${this.batchCurrent}/${this.batchTotal})</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            
             this.connectWebSocket(this.jobId);
 
         } catch (err) {
-            // Re-enable buttons on error
             generateBtn.disabled = false;
             generateBtn.innerHTML = '🎬 Generate Video';
             this.showError(err.message);
@@ -427,11 +450,31 @@ class HugeGullUI {
         // Handle completion
         if (data.status === 'completed') {
             this.updateProgress(100);
-            setTimeout(() => this.showSuccess(data.output_file), 500);
+            this.batchResults.push(data.output_file);
+            
+            if (this.batchCurrent < this.batchTotal) {
+                this.batchCurrent++;
+                const logOutput = document.getElementById('logOutput');
+                logOutput.innerHTML += `<div class="log-line success">✅ Job finished successfully. Starting next job...</div>`;
+                logOutput.scrollTop = logOutput.scrollHeight;
+                
+                // Clear progress bars for next job
+                setTimeout(() => {
+                    this.updateProgress(0);
+                    document.getElementById('progressText').textContent = 'Initializing next job...';
+                    document.getElementById('progressPercent').textContent = '0%';
+                    this.triggerNextJob();
+                }, 1000);
+            } else {
+                setTimeout(() => this.showSuccess(data.output_file), 500);
+            }
         }
 
         // Handle failure
         if (data.status === 'failed') {
+            const generateBtn = document.getElementById('generateBtn');
+            generateBtn.disabled = false;
+            generateBtn.innerHTML = '🎬 Generate Video';
             this.showError(data.error || 'Generation failed', data.can_resume);
         }
     }
@@ -441,9 +484,25 @@ class HugeGullUI {
     }
 
     showSuccess(outputFile) {
+        const generateBtn = document.getElementById('generateBtn');
+        generateBtn.disabled = false;
+        generateBtn.innerHTML = '🎬 Generate Video';
+
         this.showSection('resultSection');
         const downloadBtn = document.getElementById('downloadBtn');
+        
         downloadBtn.href = `/api/download/${this.jobId}`;
+        
+        if (this.batchTotal > 1) {
+            const resultHeader = document.querySelector('#resultSection h2');
+            resultHeader.innerHTML = `<span class="material-symbols-outlined text-4xl">check_circle</span> All ${this.batchTotal} Jobs Complete!`;
+            downloadBtn.innerHTML = `<span class="material-symbols-outlined">download</span> Download Last`;
+        } else {
+            const resultHeader = document.querySelector('#resultSection h2');
+            resultHeader.innerHTML = `<span class="material-symbols-outlined text-4xl">check_circle</span> Complete!`;
+            downloadBtn.innerHTML = `<span class="material-symbols-outlined">download</span> Download Video`;
+        }
+        
         this.loadRecentJobs();
     }
 
@@ -464,12 +523,8 @@ class HugeGullUI {
     }
 
     resumeJob() {
-        // Enable resume in settings and retry
-        const settings = this.getSettings();
-        settings.resume = true;
-        
-        // Re-submit with resume flag
-        this.startGeneration(false);
+        this.forceResume = true;
+        this.triggerNextJob();
     }
 
     reset() {
