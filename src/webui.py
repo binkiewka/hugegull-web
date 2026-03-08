@@ -18,7 +18,8 @@ from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from config import Config
+# Import modules but not the global config instance
+import config as config_module
 from engine import Engine, ClipSection
 from utils import utils
 from info import info
@@ -102,6 +103,38 @@ class WebUIEngine(Engine):
         return result
 
 
+def configure_job_config(url: str, name: str, settings: dict) -> None:
+    """Configure the global config for a job"""
+    cfg = config_module.config
+    
+    # Reset for this job
+    cfg.urls = [url]
+    cfg.name = name or ""
+    
+    # Apply settings
+    cfg.duration = float(settings.get("duration", 45))
+    cfg.fps = int(settings.get("fps", 30))
+    cfg.crf = int(settings.get("crf", 28))
+    cfg.min_clip_duration = float(settings.get("min_clip_duration", 3))
+    cfg.max_clip_duration = float(settings.get("max_clip_duration", 9))
+    cfg.avg_clip_duration = float(settings.get("avg_clip_duration", 6))
+    cfg.gpu = settings.get("gpu", "")
+    cfg.fade = float(settings.get("fade", 0.03))
+    
+    # New features
+    cfg.scene_detection = settings.get("scene_detection", False)
+    cfg.scene_threshold = float(settings.get("scene_threshold", 0.3))
+    cfg.skip_start = float(settings.get("skip_start", 0))
+    cfg.skip_end = float(settings.get("skip_end", 0))
+    cfg.resume = settings.get("resume", False)
+    cfg.shuffle_clips = settings.get("shuffle_clips", False)
+    cfg.sort_by = settings.get("sort_by", "index")
+    cfg.aspect_ratio = settings.get("aspect_ratio", "")
+    cfg.output_format = settings.get("output_format", "mp4")
+    cfg.preview = settings.get("preview", False)
+    cfg.dry_run = settings.get("dry_run", False)
+
+
 async def run_generation(job_id: str, url: str, name: str, settings: dict) -> None:
     """Run video generation in background"""
     job = jobs[job_id]
@@ -109,38 +142,11 @@ async def run_generation(job_id: str, url: str, name: str, settings: dict) -> No
     job.is_preview = settings.get("preview", False) or settings.get("dry_run", False)
     
     try:
-        # Create a fresh config for this job
-        global config
-        original_config = config
+        # Configure the global config for this job
+        configure_job_config(url, name, settings)
+        cfg = config_module.config
         
-        config = Config()
-        config.urls = [url]
-        config.name = name
-        
-        # Apply settings
-        config.duration = float(settings.get("duration", 45))
-        config.fps = int(settings.get("fps", 30))
-        config.crf = int(settings.get("crf", 28))
-        config.min_clip_duration = float(settings.get("min_clip_duration", 3))
-        config.max_clip_duration = float(settings.get("max_clip_duration", 9))
-        config.avg_clip_duration = float(settings.get("avg_clip_duration", 6))
-        config.gpu = settings.get("gpu", "")
-        config.fade = float(settings.get("fade", 0.03))
-        
-        # New features
-        config.scene_detection = settings.get("scene_detection", False)
-        config.scene_threshold = float(settings.get("scene_threshold", 0.3))
-        config.skip_start = float(settings.get("skip_start", 0))
-        config.skip_end = float(settings.get("skip_end", 0))
-        config.resume = settings.get("resume", False)
-        config.shuffle_clips = settings.get("shuffle_clips", False)
-        config.sort_by = settings.get("sort_by", "index")
-        config.aspect_ratio = settings.get("aspect_ratio", "")
-        config.output_format = settings.get("output_format", "mp4")
-        config.preview = settings.get("preview", False)
-        config.dry_run = settings.get("dry_run", False)
-        
-        job.log(f"Starting: {config.name} | {int(config.duration)}s")
+        job.log(f"Starting: {cfg.name or 'video'} | {int(cfg.duration)}s")
         
         engine = WebUIEngine(job_id, job)
         success = engine.start()
@@ -159,7 +165,11 @@ async def run_generation(job_id: str, url: str, name: str, settings: dict) -> No
         else:
             job.status = "failed"
             job.error = "Generation failed - check sources"
-            job.can_resume = os.path.exists(os.path.join(config.project_dir, "state.json"))
+            # Check if state file exists for resume
+            try:
+                job.can_resume = os.path.exists(os.path.join(cfg.project_dir, "state.json"))
+            except:
+                job.can_resume = False
             job.log("❌ Failed: No valid sources found or generation error")
             
     except Exception as e:
@@ -172,7 +182,9 @@ async def run_generation(job_id: str, url: str, name: str, settings: dict) -> No
     if job.status == "completed" and not job.is_preview:
         try:
             import shutil
-            shutil.rmtree(config.project_dir, ignore_errors=True)
+            cfg = config_module.config
+            if os.path.exists(cfg.project_dir):
+                shutil.rmtree(cfg.project_dir, ignore_errors=True)
         except:
             pass
 
