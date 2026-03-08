@@ -15,14 +15,8 @@ setup(
             "hugegull-setup = setup_wizard:main",
         ],
     },
-    install_requires=[
-        "fastapi>=0.104.0",
-        "uvicorn[standard]>=0.24.0",
-        "websockets>=12.0",
-        "python-multipart>=0.0.6",
-        "aiofiles>=23.2.1",
-    ],
+    install_requires=[],
     extras_require={
-        "web": ["fastapi>=0.104.0", "uvicorn[standard]>=0.24.0", "websockets>=12.0"],
+        "web": ["fastapi>=0.104.0", "uvicorn[standard]>=0.24.0", "websockets>=12.0", "python-multipart>=0.0.6", "aiofiles>=23.2.1"],
     },
 )

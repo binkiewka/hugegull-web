@@ -13,9 +13,8 @@ import random
 from pathlib import Path
 from datetime import datetime
 
-# Try to import utils, fallback to local implementation
+# Import utils from same package
 try:
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
     from utils import utils
 except ImportError:
     # Fallback utils for when running as installed script
