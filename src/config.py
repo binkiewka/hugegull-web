@@ -10,10 +10,11 @@ from utils import utils
 
 class Config:
     def __init__(self) -> None:
+        # Core settings
         self.urls: list[str] = []
         self.name = ""
         self.fps = 30
-        self.crf = 30
+        self.crf = 28
         self.duration = 45.0
         self.min_clip_duration = 3.0
         self.avg_clip_duration = 6.0
@@ -25,6 +26,19 @@ class Config:
         self.fade = 0.03
         self.gpu = ""
         self.config = ""
+        
+        # New feature flags
+        self.scene_detection = False
+        self.scene_threshold = 0.3
+        self.preview = False
+        self.dry_run = False
+        self.skip_start = 0.0
+        self.skip_end = 0.0
+        self.resume = False
+        self.shuffle_clips = False
+        self.sort_by = "index"  # "index", "scene_score", "random"
+        self.aspect_ratio = ""  # "16:9", "9:16", "1:1", "4:5", or "" for original
+        self.output_format = "mp4"  # "mp4", "webm", "mov"
 
         self.env_url = utils.get_env("HUGE_URL")
         self.env_name = utils.get_env("HUGE_NAME")
@@ -79,11 +93,26 @@ class Config:
             print(f"Error: Missing argument value for --{c}")
             sys.exit(1)
 
-    def read_args(self) -> None:
-        if "--open" in sys.argv:
-            self.open = True
-            sys.argv.remove("--open")
+    def has_arg(self, c: str) -> bool:
+        """Check if argument exists without consuming it"""
+        return f"--{c}" in sys.argv
 
+    def read_flag(self, c: str, k: str) -> None:
+        """Read a boolean flag"""
+        if f"--{c}" in sys.argv:
+            setattr(self, k, True)
+            sys.argv.remove(f"--{c}")
+
+    def read_args(self) -> None:
+        # Boolean flags
+        self.read_flag("open", "open")
+        self.read_flag("scene-detection", "scene_detection")
+        self.read_flag("preview", "preview")
+        self.read_flag("dry-run", "dry_run")
+        self.read_flag("resume", "resume")
+        self.read_flag("shuffle", "shuffle_clips")
+        
+        # String arguments
         if "--config" in sys.argv:
             self.get_arg("config", "config")
 
@@ -92,53 +121,87 @@ class Config:
 
         if "--name" in sys.argv:
             self.get_arg("name", "name")
+            
+        if "--gpu" in sys.argv:
+            self.get_arg("gpu", "gpu")
+            
+        if "--aspect-ratio" in sys.argv:
+            self.get_arg("aspect-ratio", "aspect_ratio")
+            
+        if "--format" in sys.argv:
+            self.get_arg("format", "output_format")
+            
+        if "--sort-by" in sys.argv:
+            self.get_arg("sort-by", "sort_by")
+
+        # Float arguments
+        if "--scene-threshold" in sys.argv:
+            arg_idx = sys.argv.index("--scene-threshold")
+            if arg_idx + 1 < len(sys.argv):
+                self.scene_threshold = float(sys.argv[arg_idx + 1])
+                sys.argv.pop(arg_idx + 1)
+                sys.argv.pop(arg_idx)
+                
+        if "--skip-start" in sys.argv:
+            arg_idx = sys.argv.index("--skip-start")
+            if arg_idx + 1 < len(sys.argv):
+                self.skip_start = float(sys.argv[arg_idx + 1])
+                sys.argv.pop(arg_idx + 1)
+                sys.argv.pop(arg_idx)
+                
+        if "--skip-end" in sys.argv:
+            arg_idx = sys.argv.index("--skip-end")
+            if arg_idx + 1 < len(sys.argv):
+                self.skip_end = float(sys.argv[arg_idx + 1])
+                sys.argv.pop(arg_idx + 1)
+                sys.argv.pop(arg_idx)
 
         if not self.urls:
             self.urls.append(self.env_url)
 
         if not self.name:
-            self.name = self.env_name or utils.get_random_name()
+            self.name = self.env_name or ""
 
     def read_config_file(self) -> None:
-        with open(self.config_path, "rb") as f:
-            config_data = tomllib.load(f)
+        try:
+            with open(self.config_path, "rb") as f:
+                config_data = tomllib.load(f)
+        except Exception:
+            return
 
-        # How long should the video aim to be
+        # Core settings
         if "duration" in config_data:
             self.duration = float(config_data["duration"])
-
-        # Frames per second
         if "fps" in config_data:
             self.fps = int(config_data["fps"])
-
-        # A bigger crf means lower quality
-        # 28 is considered good enough
         if "crf" in config_data:
             self.crf = int(config_data["crf"])
-
-        # Path where files are saved
         if "path" in config_data:
             self.path = config_data["path"]
-
-        # Little gap between clips like 0.03 (seconds)
         if "fade" in config_data:
             self.fade = config_data["fade"]
-
-        # Either "amd" or "nvidia"
         if "gpu" in config_data:
             self.gpu = config_data["gpu"]
-
-        # How long can clips be
         if "max_clip_duration" in config_data:
-            self.max_clip_duration = config_data["max_clip_duration"]
-
-        # Clip duration is often close to this
+            self.max_clip_duration = float(config_data["max_clip_duration"])
         if "avg_clip_duration" in config_data:
-            self.avg_clip_duration = config_data["avg_clip_duration"]
-
-        # The smallest clip duration
+            self.avg_clip_duration = float(config_data["avg_clip_duration"])
         if "min_clip_duration" in config_data:
-            self.min_clip_duration = config_data["min_clip_duration"]
+            self.min_clip_duration = float(config_data["min_clip_duration"])
+            
+        # New feature settings
+        if "scene_detection" in config_data:
+            self.scene_detection = bool(config_data["scene_detection"])
+        if "scene_threshold" in config_data:
+            self.scene_threshold = float(config_data["scene_threshold"])
+        if "skip_start" in config_data:
+            self.skip_start = float(config_data["skip_start"])
+        if "skip_end" in config_data:
+            self.skip_end = float(config_data["skip_end"])
+        if "aspect_ratio" in config_data:
+            self.aspect_ratio = config_data["aspect_ratio"]
+        if "output_format" in config_data:
+            self.output_format = config_data["output_format"]
 
 
 config = Config()

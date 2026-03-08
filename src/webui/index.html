@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HugeGull - Video Clip Generator</title>
+    <title>HugeGull - Smart Video Clip Generator</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>🐦 HugeGull</h1>
-            <p>Generate random clip compilations from video streams</p>
+            <p>Generate smart clip compilations from video streams</p>
         </header>
 
         <main>
@@ -24,7 +24,26 @@
 
                 <div class="form-group">
                     <label for="name">Output Name (optional)</label>
-                    <input type="text" id="name" placeholder="Leave empty for random name" />
+                    <input type="text" id="name" placeholder="Leave empty to use video title" />
+                </div>
+
+                <!-- Smart Features Toggle -->
+                <div class="feature-toggles">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="sceneDetection" />
+                        <span class="toggle-text">🎬 Scene Detection (smart cuts)</span>
+                    </label>
+                </div>
+
+                <!-- Presets -->
+                <div class="presets">
+                    <label>Quick Presets:</label>
+                    <div class="preset-buttons">
+                        <button type="button" class="preset-btn" data-preset="youtube">YouTube</button>
+                        <button type="button" class="preset-btn" data-preset="tiktok">TikTok/Shorts</button>
+                        <button type="button" class="preset-btn" data-preset="instagram">Instagram</button>
+                        <button type="button" class="preset-btn" data-preset="twitter">Twitter/X</button>
+                    </div>
                 </div>
 
                 <div class="advanced-toggle">
@@ -35,7 +54,7 @@
                 <div class="advanced-settings" id="advancedSettings" style="display: none;">
                     <div class="settings-grid">
                         <div class="form-group">
-                            <label for="duration">Total Duration (seconds)</label>
+                            <label for="duration">Total Duration (sec)</label>
                             <input type="number" id="duration" value="45" min="5" max="300" />
                         </div>
 
@@ -47,16 +66,16 @@
                         <div class="form-group">
                             <label for="crf">Quality (CRF)</label>
                             <input type="number" id="crf" value="28" min="18" max="35" />
-                            <small>Lower = better quality, larger file</small>
+                            <small>Lower = better quality</small>
                         </div>
 
                         <div class="form-group">
-                            <label for="minClip">Min Clip Duration</label>
+                            <label for="minClip">Min Clip (sec)</label>
                             <input type="number" id="minClip" value="3" min="1" max="30" step="0.5" />
                         </div>
 
                         <div class="form-group">
-                            <label for="maxClip">Max Clip Duration</label>
+                            <label for="maxClip">Max Clip (sec)</label>
                             <input type="number" id="maxClip" value="9" min="1" max="60" step="0.5" />
                         </div>
 
@@ -66,19 +85,81 @@
                                 <option value="">CPU (software)</option>
                                 <option value="nvidia">NVIDIA (NVENC)</option>
                                 <option value="amd">AMD (VAAPI)</option>
+                                <option value="intel">Intel (Quick Sync)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="aspectRatio">Aspect Ratio</label>
+                            <select id="aspectRatio">
+                                <option value="">Original</option>
+                                <option value="16:9">16:9 (YouTube)</option>
+                                <option value="9:16">9:16 (TikTok/Shorts)</option>
+                                <option value="1:1">1:1 (Instagram)</option>
+                                <option value="4:5">4:5 (Portrait)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="outputFormat">Format</label>
+                            <select id="outputFormat">
+                                <option value="mp4">MP4</option>
+                                <option value="webm">WebM</option>
+                                <option value="mov">MOV</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="skip-settings">
+                        <h4>Skip Intros/Outros</h4>
+                        <div class="settings-grid">
+                            <div class="form-group">
+                                <label for="skipStart">Skip Start (sec)</label>
+                                <input type="number" id="skipStart" value="0" min="0" max="300" />
+                            </div>
+                            <div class="form-group">
+                                <label for="skipEnd">Skip End (sec)</label>
+                                <input type="number" id="skipEnd" value="0" min="0" max="300" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ordering-settings">
+                        <h4>Clip Ordering</h4>
+                        <div class="form-group">
+                            <select id="sortBy">
+                                <option value="index">Original Order</option>
+                                <option value="scene_score">Most Dynamic First</option>
+                                <option value="random">Random Shuffle</option>
                             </select>
                         </div>
                     </div>
                 </div>
 
-                <button type="button" id="generateBtn" class="btn-primary">
-                    🎬 Generate Video
-                </button>
+                <div class="action-buttons">
+                    <button type="button" id="previewBtn" class="btn-secondary">
+                        👁️ Preview
+                    </button>
+                    <button type="button" id="generateBtn" class="btn-primary">
+                        🎬 Generate Video
+                    </button>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section" id="previewSection" style="display: none;">
+                <h2>📋 Planned Clips</h2>
+                <div class="clips-list" id="clipsList"></div>
+                <button type="button" id="closePreviewBtn" class="btn-secondary">Close Preview</button>
             </section>
 
             <!-- Progress Section -->
             <section class="progress-section" id="progressSection" style="display: none;">
                 <h2>⏳ Generating...</h2>
+                <div class="progress-stats">
+                    <span id="progressText">Clip 0 of 0</span>
+                    <span id="progressPercent">0%</span>
+                </div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressFill"></div>
                 </div>
@@ -102,9 +183,14 @@
             <section class="error-section" id="errorSection" style="display: none;">
                 <h2>❌ Error</h2>
                 <p id="errorMessage"></p>
-                <button type="button" id="retryBtn" class="btn-secondary">
-                    🔄 Try Again
-                </button>
+                <div class="error-actions">
+                    <button type="button" id="retryBtn" class="btn-secondary">
+                        🔄 Try Again
+                    </button>
+                    <button type="button" id="resumeBtn" class="btn-primary" style="display: none;">
+                        ▶️ Resume
+                    </button>
+                </div>
             </section>
 
             <!-- Recent Jobs -->
@@ -118,9 +204,47 @@
 
         <footer>
             <p>HugeGull v<span id="version">1.0</span> — 
-               <a href="https://github.com/binkiewka/hugegull" target="_blank">GitHub</a>
+               <a href="https://github.com/binkiewka/hugegull" target="_blank">GitHub</a> |
+               <a href="#" id="showHelp">Help</a>
             </p>
         </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="helpModal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>How to Use HugeGull</h2>
+            <div class="help-content">
+                <h3>Basic Usage</h3>
+                <ol>
+                    <li>Paste a video URL (YouTube, Twitch, or direct stream)</li>
+                    <li>Click "Generate Video"</li>
+                    <li>Wait for processing</li>
+                    <li>Download your clip compilation</li>
+                </ol>
+                
+                <h3>Scene Detection</h3>
+                <p>Enable "Scene Detection" for smarter cuts. Instead of random timestamps, 
+                   HugeGull will find actual scene changes in the video for better transitions.</p>
+                
+                <h3>Presets</h3>
+                <ul>
+                    <li><strong>YouTube:</strong> 16:9 aspect ratio, 45 seconds</li>
+                    <li><strong>TikTok/Shorts:</strong> 9:16 vertical, 30 seconds</li>
+                    <li><strong>Instagram:</strong> 1:1 square, 30 seconds</li>
+                    <li><strong>Twitter:</strong> 16:9, 60 seconds</li>
+                </ul>
+                
+                <h3>Tips</h3>
+                <ul>
+                    <li>Use "Preview" to see what clips will be extracted</li>
+                    <li>Skip intros/outros with Advanced Settings</li>
+                    <li>Use GPU encoding for faster processing</li>
+                    <li>Sort by "Most Dynamic First" for action highlights</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script src="/static/app.js"></script>

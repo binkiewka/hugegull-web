@@ -1,17 +1,21 @@
-/* HugeGull Web UI Styles */
+/* HugeGull Web UI Styles - Enhanced */
 
 :root {
-    --bg-primary: #0f0f23;
-    --bg-secondary: #1a1a2e;
-    --bg-tertiary: #252542;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --accent: #6c5ce7;
-    --accent-hover: #5b4cdb;
-    --success: #00b894;
-    --error: #ff7675;
-    --warning: #fdcb6e;
-    --border: #333350;
+    --bg-primary: #0a0a12;
+    --bg-secondary: #12121f;
+    --bg-tertiary: #1e1e2e;
+    --bg-hover: #2a2a3e;
+    --text-primary: #e8e8f0;
+    --text-secondary: #9ca3af;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --accent-glow: rgba(99, 102, 241, 0.3);
+    --success: #22c55e;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+    --border: #2d2d44;
+    --border-light: #3d3d5c;
 }
 
 * {
@@ -29,7 +33,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -37,15 +41,15 @@ body {
 /* Header */
 header {
     text-align: center;
-    padding: 40px 0;
+    padding: 40px 0 30px;
     border-bottom: 1px solid var(--border);
     margin-bottom: 30px;
 }
 
 header h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin-bottom: 10px;
-    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    background: linear-gradient(135deg, var(--accent), #a5b4fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -74,32 +78,105 @@ header p {
     padding: 12px 16px;
     background: var(--bg-secondary);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
     color: var(--text-primary);
     font-size: 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: all 0.2s;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .form-group small {
     display: block;
-    margin-top: 5px;
+    margin-top: 6px;
     color: var(--text-secondary);
     font-size: 0.85rem;
 }
 
+/* Feature Toggles */
+.feature-toggles {
+    margin: 20px 0;
+    padding: 15px;
+    background: var(--bg-secondary);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.toggle-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+.toggle-text {
+    font-size: 1rem;
+}
+
+/* Presets */
+.presets {
+    margin: 20px 0;
+}
+
+.presets label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.preset-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    padding: 10px 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.preset-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+}
+
+.preset-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
 /* Buttons */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
 .btn-primary,
 .btn-secondary {
     padding: 14px 28px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
@@ -107,18 +184,19 @@ header p {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    flex: 1;
+    justify-content: center;
 }
 
 .btn-primary {
     background: var(--accent);
     color: white;
-    width: 100%;
-    justify-content: center;
 }
 
 .btn-primary:hover {
     background: var(--accent-hover);
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--accent-glow);
 }
 
 .btn-primary:disabled {
@@ -126,20 +204,23 @@ header p {
     color: var(--text-secondary);
     cursor: not-allowed;
     transform: none;
+    box-shadow: none;
 }
 
 .btn-secondary {
     background: var(--bg-tertiary);
     color: var(--text-primary);
+    border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-    background: var(--border);
+    background: var(--bg-hover);
+    border-color: var(--border-light);
 }
 
 /* Advanced Settings */
 .advanced-toggle {
-    margin-bottom: 20px;
+    margin: 20px 0;
 }
 
 .advanced-toggle button {
@@ -147,7 +228,7 @@ header p {
     border: 1px solid var(--border);
     color: var(--text-secondary);
     padding: 10px 20px;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.2s;
@@ -161,14 +242,14 @@ header p {
 .advanced-settings {
     background: var(--bg-secondary);
     border-radius: 12px;
-    padding: 20px;
+    padding: 25px;
     margin-bottom: 20px;
     animation: slideDown 0.3s ease;
 }
 
 .settings-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 15px;
 }
 
@@ -181,6 +262,69 @@ header p {
     background: var(--bg-tertiary);
 }
 
+.skip-settings,
+.ordering-settings {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.skip-settings h4,
+.ordering-settings h4 {
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Preview Section */
+.preview-section {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 25px;
+    margin: 20px 0;
+}
+
+.preview-section h2 {
+    margin-bottom: 20px;
+    color: var(--info);
+}
+
+.clips-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.clip-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid var(--border);
+}
+
+.clip-number {
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 50px;
+}
+
+.clip-time {
+    flex: 1;
+    text-align: center;
+    font-family: monospace;
+}
+
+.clip-score {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
 /* Progress Section */
 .progress-section {
     background: var(--bg-secondary);
@@ -190,21 +334,29 @@ header p {
 }
 
 .progress-section h2 {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: var(--warning);
 }
 
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
 .progress-bar {
-    height: 8px;
+    height: 10px;
     background: var(--bg-tertiary);
-    border-radius: 4px;
+    border-radius: 5px;
     overflow: hidden;
     margin-bottom: 20px;
 }
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), #a29bfe);
+    background: linear-gradient(90deg, var(--accent), #818cf8);
     width: 0%;
     transition: width 0.3s ease;
     animation: pulse 2s infinite;
@@ -214,7 +366,7 @@ header p {
     background: var(--bg-primary);
     border-radius: 8px;
     padding: 15px;
-    font-family: 'Consolas', 'Monaco', monospace;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.85rem;
     max-height: 300px;
     overflow-y: auto;
@@ -222,8 +374,13 @@ header p {
 }
 
 .log-output .log-line {
-    padding: 3px 0;
+    padding: 4px 0;
     color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.log-output .log-line:last-child {
+    border-bottom: none;
 }
 
 .log-output .log-line.success {
@@ -234,19 +391,23 @@ header p {
     color: var(--error);
 }
 
+.log-output .log-line.info {
+    color: var(--info);
+}
+
 /* Result Section */
 .result-section {
-    background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(0, 184, 148, 0.05));
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
     border: 1px solid var(--success);
     border-radius: 12px;
-    padding: 25px;
+    padding: 30px;
     margin: 20px 0;
     text-align: center;
 }
 
 .result-section h2 {
     color: var(--success);
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .result-actions {
@@ -264,10 +425,10 @@ header p {
 
 /* Error Section */
 .error-section {
-    background: linear-gradient(135deg, rgba(255, 118, 117, 0.1), rgba(255, 118, 117, 0.05));
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(239, 68, 68, 0.05));
     border: 1px solid var(--error);
     border-radius: 12px;
-    padding: 25px;
+    padding: 30px;
     margin: 20px 0;
     text-align: center;
 }
@@ -280,6 +441,13 @@ header p {
 .error-section p {
     color: var(--text-secondary);
     margin-bottom: 20px;
+}
+
+.error-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 /* Recent Jobs */
@@ -302,26 +470,31 @@ header p {
 
 .job-item {
     background: var(--bg-secondary);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     border: 1px solid var(--border);
-    transition: border-color 0.2s;
+    transition: all 0.2s;
 }
 
 .job-item:hover {
     border-color: var(--accent);
+    transform: translateX(4px);
 }
 
 .job-info {
     flex: 1;
+    min-width: 0;
 }
 
 .job-name {
     font-weight: 500;
     margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .job-meta {
@@ -330,11 +503,12 @@ header p {
 }
 
 .job-status {
-    padding: 5px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .job-status.pending {
@@ -365,6 +539,7 @@ header p {
     color: var(--accent);
     text-decoration: none;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .job-actions a:hover {
@@ -374,7 +549,8 @@ header p {
 .empty {
     color: var(--text-secondary);
     text-align: center;
-    padding: 30px;
+    padding: 40px;
+    font-style: italic;
 }
 
 /* Footer */
@@ -390,10 +566,80 @@ footer {
 footer a {
     color: var(--accent);
     text-decoration: none;
+    margin: 0 8px;
 }
 
 footer a:hover {
     text-decoration: underline;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    border: 1px solid var(--border);
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: var(--text-primary);
+}
+
+.help-content h3 {
+    margin: 25px 0 12px;
+    color: var(--accent);
+}
+
+.help-content h3:first-child {
+    margin-top: 0;
+}
+
+.help-content p {
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.help-content ol,
+.help-content ul {
+    margin-left: 20px;
+    color: var(--text-secondary);
+}
+
+.help-content li {
+    margin-bottom: 8px;
+}
+
+.help-content strong {
+    color: var(--text-primary);
 }
 
 /* Animations */
@@ -427,12 +673,42 @@ footer a:hover {
         grid-template-columns: 1fr;
     }
     
-    .result-actions {
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .result-actions,
+    .error-actions {
         flex-direction: column;
     }
     
     .result-actions .btn-primary,
-    .result-actions .btn-secondary {
+    .result-actions .btn-secondary,
+    .error-actions .btn-primary,
+    .error-actions .btn-secondary {
         width: 100%;
+    }
+    
+    .preset-buttons {
+        justify-content: center;
+    }
+    
+    .preset-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+    }
+    
+    .job-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .job-status {
+        align-self: flex-start;
+    }
+    
+    .job-actions {
+        margin-left: 0;
     }
 }
