@@ -44,7 +44,16 @@ class Engine:
                 else:
                     source["duration"] = self.get_stream_duration(url)
 
-            if source["duration"] > 0:
+            raw_duration = source["duration"]
+            duration = 0.0
+
+            if raw_duration is not None:
+                try:
+                    duration = float(raw_duration)
+                except ValueError:
+                    duration = 0.0
+
+            if duration > 0:
                 self.sources.append(source)
             else:
                 utils.info(f"Could not determine duration for {url}, skipping.")
