@@ -19,7 +19,7 @@ Generate smart clip compilations from video streams.
 ### Interactive Setup (Recommended for first-time users)
 
 ```bash
-pipx install git+https://github.com/madprops/hugegull --force
+pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
 hugegull-setup
 ```
 
@@ -32,12 +32,12 @@ The setup wizard will help you configure:
 ### Manual Installation
 
 ```bash
-pipx install git+https://github.com/madprops/hugegull --force
+pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
 ```
 
 Or clone and install:
 ```bash
-git clone https://github.com/madprops/hugegull.git
+git clone -b feature/web-ui https://github.com/binkiewka/hugegull.git
 cd hugegull
 pip install -e .
 ```
@@ -70,7 +70,8 @@ hugegull https://youtube.com/watch?v=... --resume
 
 ```bash
 hugegull-web
-# Open http://localhost:8080 in your browser
+# Open http://localhost:28472 in your browser
+# Or: hugegull-web --port 8080 to use a different port
 ```
 
 The web UI includes:
