@@ -261,7 +261,7 @@ class Engine:
             return None
 
     def detect_scenes(self, source: dict[str, Any]) -> list[tuple[float, float]]:
-        """Detect scene changes using ffmpeg scene filter with smart sampling for long videos"""
+        """Detect scene changes using keyframe analysis for fast full-video coverage"""
         v_data = source["v_data"]
         duration = source["duration"]
 
@@ -274,37 +274,75 @@ class Engine:
 
         analysis_duration = duration - start_offset - end_offset
 
-        # For long videos, analyze in chunks to avoid processing entire video
-        max_analysis_time = 300  # 5 minutes max analysis time per segment
-        max_total_scenes = 100  # Collect more scenes initially, then sample
-        target_scenes = 30  # Final number of well-distributed scenes
+        # For very long videos (>20 min), use keyframe analysis which is instant
+        if analysis_duration > 1200:  # 20 minutes
+            return self._detect_scenes_by_keyframes(v_data, duration, start_offset, end_offset)
 
-        all_scenes = []  # Collect all scenes first
+        # For medium videos (5-20 min), increase sampling coverage
+        if analysis_duration > 300:  # 5 minutes
+            return self._detect_scenes_by_sampling(v_data, duration, start_offset, end_offset, coverage=0.25)
 
-        # Calculate how many segments to sample
-        if analysis_duration > max_analysis_time:
-            # Sample multiple segments evenly distributed throughout the video
-            num_segments = min(10, int(analysis_duration / 60))  # One segment per minute, max 10
-            segment_duration = min(60, max_analysis_time / num_segments)  # 1 min per segment
+        # Short video - analyze the whole thing
+        return self._detect_scenes_full(v_data, duration, start_offset, end_offset)
 
-            # Evenly distribute segments across the video (not clustered at start)
-            available_space = analysis_duration - (segment_duration * num_segments)
-            spacing = available_space / (num_segments + 1) if num_segments > 1 else 0
+    def _detect_scenes_by_keyframes(self, v_data: str, duration: float, start_offset: float, end_offset: float) -> list[tuple[float, float]]:
+        """Use ffprobe to get keyframe timestamps - much faster than scene detection"""
+        utils.info(f"Analyzing keyframes across full video ({int(duration/60)}min) - this is fast...")
 
-            segment_starts = [
-                start_offset + spacing * (i + 1) + segment_duration * i
-                for i in range(num_segments)
-            ]
+        # Get keyframe timestamps using ffprobe
+        command = [
+            "ffprobe",
+            "-v", "error",
+            "-select_streams", "v:0",
+            "-show_entries", "frame=pkt_pts_time",
+            "-of", "csv=p=0",
+            "-skip_frame", "nokey",  # Only keyframes
+            v_data
+        ]
 
-            utils.info(f"Scanning {num_segments} segments across video (total {int(duration/60)}min)...")
-        else:
-            # Short video - analyze the whole thing
-            segment_starts = [start_offset]
-            segment_duration = analysis_duration
-            utils.info(f"Detecting scenes...")
+        result = subprocess.run(command, capture_output=True, text=True)
 
+        keyframes = []
+        for line in result.stdout.strip().split("\n"):
+            if line:
+                try:
+                    timestamp = float(line)
+                    # Apply skip offsets
+                    if timestamp < start_offset or timestamp > duration - end_offset:
+                        continue
+                    keyframes.append(timestamp)
+                except ValueError:
+                    continue
+
+        if len(keyframes) < 10:
+            # Not enough keyframes, fall back to random
+            utils.info(f"Found {len(keyframes)} keyframes, adding random points...")
+            return self._add_random_points(keyframes, duration, start_offset, end_offset, target_count=30)
+
+        # Sample well-distributed keyframes
+        return self._select_distributed_scenes(keyframes, duration, start_offset, end_offset, target_count=30)
+
+    def _detect_scenes_by_sampling(self, v_data: str, duration: float, start_offset: float, end_offset: float, coverage: float = 0.25) -> list[tuple[float, float]]:
+        """Sample segments covering X% of the video duration"""
+        analysis_duration = duration - start_offset - end_offset
+
+        # Calculate segment parameters for desired coverage
+        # e.g., 25% coverage of 60min = 15min total scanning
+        total_scan_time = analysis_duration * coverage
+        num_segments = min(20, int(total_scan_time / 45))  # 45 seconds per segment, max 20 segments
+        segment_duration = total_scan_time / num_segments if num_segments > 0 else 45
+
+        utils.info(f"Scanning {num_segments} segments ({int(coverage*100)}% coverage of {int(duration/60)}min video)...")
+
+        # Evenly distribute segments
+        spacing = (analysis_duration - total_scan_time) / (num_segments + 1)
+        segment_starts = [
+            start_offset + spacing * (i + 1) + segment_duration * i
+            for i in range(num_segments)
+        ]
+
+        all_scenes = []
         for seg_start in segment_starts:
-            # Use ffmpeg scene detection on segment
             command = [
                 "ffmpeg",
                 "-ss", str(seg_start),
@@ -320,59 +358,111 @@ class Engine:
             for line in result.stderr.split("\n"):
                 if "pts_time:" in line:
                     try:
-                        # Extract timestamp from showinfo output
                         time_str = line.split("pts_time:")[1].split()[0]
                         timestamp = float(time_str) + seg_start
 
-                        # Apply skip offsets
                         if timestamp < start_offset or timestamp > duration - end_offset:
                             continue
 
-                        # Avoid duplicates (scenes within 3 seconds)
-                        if not any(abs(timestamp - s) < 3.0 for s in all_scenes):
+                        # Avoid duplicates (scenes within 2 seconds)
+                        if not any(abs(timestamp - s) < 2.0 for s in all_scenes):
                             all_scenes.append(timestamp)
 
-                        if len(all_scenes) >= max_total_scenes:
+                        if len(all_scenes) >= 150:  # Collect more scenes with better coverage
                             break
                     except (IndexError, ValueError):
                         continue
 
-            if len(all_scenes) >= max_total_scenes:
+            if len(all_scenes) >= 150:
                 break
 
-        # Now select well-distributed scenes from what we found
-        if len(all_scenes) <= target_scenes:
-            return sorted(all_scenes)
+        return self._select_distributed_scenes(all_scenes, duration, start_offset, end_offset, target_count=30)
 
-        # Sort scenes by timestamp
-        all_scenes = sorted(all_scenes)
+    def _detect_scenes_full(self, v_data: str, duration: float, start_offset: float, end_offset: float) -> list[tuple[float, float]]:
+        """Full scene detection for short videos"""
+        utils.info(f"Analyzing full video ({int(duration)}sec)...")
 
-        # Select scenes that are well-distributed across the video
-        selected_scenes = []
+        command = [
+            "ffmpeg",
+            "-ss", str(start_offset),
+            "-t", str(duration - start_offset - end_offset),
+            "-i", v_data,
+            "-vf", f"select='gt(scene,{config.scene_threshold})',showinfo",
+            "-f", "null",
+            "-",
+        ]
+
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        scenes = []
+        for line in result.stderr.split("\n"):
+            if "pts_time:" in line:
+                try:
+                    time_str = line.split("pts_time:")[1].split()[0]
+                    timestamp = float(time_str) + start_offset
+
+                    if timestamp < start_offset or timestamp > duration - end_offset:
+                        continue
+
+                    if not any(abs(timestamp - s) < 2.0 for s in scenes):
+                        scenes.append(timestamp)
+
+                    if len(scenes) >= 50:
+                        break
+                except (IndexError, ValueError):
+                    continue
+
+        return sorted(scenes)
+
+    def _select_distributed_scenes(self, scenes: list, duration: float, start_offset: float, end_offset: float, target_count: int = 30) -> list[tuple[float, float]]:
+        """Select scenes that are well-distributed across the video"""
+        if len(scenes) <= target_count:
+            return sorted(scenes)
+
+        scenes = sorted(scenes)
         video_duration = duration - start_offset - end_offset
 
-        # Divide video into target_scenes buckets and pick one from each
-        bucket_size = video_duration / target_scenes
+        # Divide video into buckets and pick one scene from each
+        bucket_size = video_duration / target_count
+        selected = []
 
-        for i in range(target_scenes):
+        for i in range(target_count):
             bucket_start = start_offset + i * bucket_size
             bucket_end = bucket_start + bucket_size
 
-            # Find scenes in this bucket
-            bucket_scenes = [s for s in all_scenes if bucket_start <= s < bucket_end]
+            bucket_scenes = [s for s in scenes if bucket_start <= s < bucket_end]
 
             if bucket_scenes:
-                # Randomly select one scene from this bucket
-                selected_scenes.append(random.choice(bucket_scenes))
+                selected.append(random.choice(bucket_scenes))
 
-        # If we didn't get enough scenes, fill in with random ones from remaining
-        while len(selected_scenes) < target_scenes and all_scenes:
-            remaining = [s for s in all_scenes if s not in selected_scenes]
+        # Fill remaining with random from unused scenes
+        while len(selected) < target_count and scenes:
+            remaining = [s for s in scenes if s not in selected]
             if not remaining:
                 break
-            selected_scenes.append(random.choice(remaining))
+            selected.append(random.choice(remaining))
 
-        return sorted(selected_scenes)
+        return sorted(selected)
+
+    def _add_random_points(self, scenes: list, duration: float, start_offset: float, end_offset: float, target_count: int = 30) -> list[tuple[float, float]]:
+        """Add random timestamps to supplement low scene count"""
+        scenes = list(scenes)
+        video_duration = duration - start_offset - end_offset
+
+        while len(scenes) < target_count:
+            # Add random points distributed across video
+            bucket_size = video_duration / target_count
+            bucket_idx = len(scenes)
+            bucket_start = start_offset + bucket_idx * bucket_size
+            bucket_end = min(bucket_start + bucket_size, duration - end_offset)
+
+            random_time = random.uniform(bucket_start, bucket_end)
+
+            # Avoid duplicates
+            if not any(abs(random_time - s) < 3.0 for s in scenes):
+                scenes.append(random_time)
+
+        return sorted(scenes)
 
     def generate_scene_based_sections(self) -> list[ClipSection]:
         """Generate clip sections based on scene detection"""
