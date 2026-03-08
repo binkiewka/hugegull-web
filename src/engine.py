@@ -196,7 +196,7 @@ class Engine:
             )
 
             utils.action(
-                f"Clip {i + 1} starting at {round(start)}s (Duration: {round(duration)}s) [Mode: {mode}]"
+                f"Clip {i + 1} starting at {round(start)}s (Duration: {round(duration)}s) ({mode})"
             )
 
             try:

@@ -38,8 +38,7 @@ def main() -> None:
     start_time = time.perf_counter()
     engine.start()
     end_time = time.perf_counter()
-    duration = end_time - start_time
-    utils.info(f"Done in {duration:.4f} seconds")
+    utils.info(f"Done in {int(duration)} seconds")
 
     if config.open:
         utils.open_file(engine.file)
