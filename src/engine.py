@@ -56,7 +56,6 @@ class Engine:
             "yt-dlp",
             "--no-playlist",  # Skips playlist resolution
             "--no-warnings",  # Skips printing/processing warnings
-            "--no-comments",  # Skips fetching comment data
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
