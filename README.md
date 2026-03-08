@@ -19,7 +19,11 @@ Generate smart clip compilations from video streams.
 ### Interactive Setup (Recommended for first-time users)
 
 ```bash
+# Install with web UI support
 pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
+pipx inject hugegull fastapi uvicorn websockets python-multipart aiofiles
+
+# Run setup wizard
 hugegull-setup
 ```
 
@@ -32,6 +36,7 @@ The setup wizard will help you configure:
 ### Manual Installation
 
 ```bash
+# Install with all features (including web UI)
 pipx install git+https://github.com/binkiewka/hugegull.git@feature/web-ui --force
 ```
 
