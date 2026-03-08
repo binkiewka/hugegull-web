@@ -1,0 +1,5 @@
+include src/webui/*.html
+include src/webui/*.css
+include src/webui/*.js
+include src/*.toml
+include src/*.txt

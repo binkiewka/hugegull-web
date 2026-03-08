@@ -7,7 +7,8 @@ setup(
     version=info.version,
     package_dir={"": "src"},
     packages=[""],
-    package_data={"": ["*.toml", "*.txt", "*.html", "*.css", "*.js"]},
+    package_data={"": ["*.toml", "*.txt", "webui/*.html", "webui/*.css", "webui/*.js"]},
+    include_package_data=True,
     entry_points={
         "console_scripts": [
             "hugegull = main:main",
