@@ -37,6 +37,14 @@ class Engine:
         self.total_clips: int = 0
         self.completed_clips: int = 0
 
+    def log(self, message: str) -> None:
+        """Log a message. Can be overridden by subclasses (e.g. WebUIEngine)"""
+        utils.info(message)
+
+    def error(self, message: str) -> None:
+        """Log an error. Can be overridden by subclasses"""
+        utils.error(message)
+
     def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
         os.makedirs(config.output_dir, exist_ok=True)
@@ -129,10 +137,10 @@ class Engine:
                 if height > self.max_height:
                     self.max_height = height
             else:
-                utils.info(f"Could not determine valid data for {url}, skipping.")
+                self.log(f"Could not determine valid data for {url}, skipping.")
 
     def start(self) -> bool:
-        utils.info(f"Starting: {config.name} | {int(config.duration)}s")
+        self.log(f"Starting: {config.name} | {int(config.duration)}s")
         
         # Check for resume state
         if config.resume and os.path.exists(self.state_file):
@@ -146,8 +154,8 @@ class Engine:
             self.prepare_sources()
 
         if len(self.sources) == 0:
-            utils.info(
-                "No valid sources found in the pool. Stream is live/endless or invalid."
+            self.log(
+                "❌ No valid sources found in the pool. Stream is live/endless or invalid."
             )
 
             shutil.rmtree(config.project_dir, ignore_errors=True)
@@ -171,7 +179,7 @@ class Engine:
         self.completed_clips = sum(1 for section in self.clip_sections 
                                    if os.path.exists(os.path.join(config.project_dir, f"temp_clip_{section.index + 1}.mp4")))
         
-        utils.info(f"Extracting {self.total_clips} clips ({self.completed_clips} already done)...")
+        self.log(f"Extracting {self.total_clips} clips ({self.completed_clips} already done)...")
         self.generate_clips_from_sections()
         
         # Reorder clips if shuffle enabled
@@ -225,14 +233,17 @@ class Engine:
             if len(args) > 0:
                 method_name = " ".join(args)
 
-            errors.append(f"[{method_name}] -> {result.stderr.strip()}")
-
+            if method_name != "default":
+                utils.info(f"YTDLP Success using method: {method_name}")
+            else:
+                utils.info("YTDLP Success using default method without cookies")
+                
+            break
+        
         if result is None or result.returncode != 0:
-            utils.error(f"Error resolving URL {url}. All attempts failed:")
-
+            self.log(f"Error resolving URL {url}. All attempts failed:")
             for err in errors:
-                utils.error(err)
-
+                self.error(err)
             return None
 
         try:
@@ -257,7 +268,7 @@ class Engine:
                 return {"v_data": metadata.get("url"), "a_url": None, "duration": duration, "title": title}
 
         except Exception as e:
-            utils.error(f"Error parsing yt-dlp output: {e}")
+            self.error(f"Error parsing yt-dlp output: {e}")
             return None
 
     def detect_scenes(self, source: dict[str, Any]) -> list[tuple[float, float]]:
@@ -274,6 +285,13 @@ class Engine:
 
         analysis_duration = duration - start_offset - end_offset
 
+        is_remote = str(v_data).startswith("http")
+
+        # For remote streams, unconditionally use keyframe analysis to avoid 
+        # downloading the full file repeatedly, UNLESS duration is extremely short (< 60s)
+        if is_remote and analysis_duration >= 60:
+             return self._detect_scenes_by_keyframes(v_data, duration, start_offset, end_offset)
+
         # For very long videos (>20 min), use keyframe analysis which is instant
         if analysis_duration > 1200:  # 20 minutes
             return self._detect_scenes_by_keyframes(v_data, duration, start_offset, end_offset)
@@ -282,12 +300,12 @@ class Engine:
         if analysis_duration > 300:  # 5 minutes
             return self._detect_scenes_by_sampling(v_data, duration, start_offset, end_offset, coverage=0.25)
 
-        # Short video - analyze the whole thing
+        # For short videos - analyze the whole thing
         return self._detect_scenes_full(v_data, duration, start_offset, end_offset)
 
     def _detect_scenes_by_keyframes(self, v_data: str, duration: float, start_offset: float, end_offset: float) -> list[tuple[float, float]]:
         """Use ffprobe to get keyframe timestamps - much faster than scene detection"""
-        utils.info(f"Analyzing keyframes across full video ({int(duration/60)}min) - this is fast...")
+        self.log(f"Analyzing keyframes across full video ({int(duration/60)}min) - this is fast...")
 
         # Get keyframe timestamps using ffprobe
         command = [
@@ -316,7 +334,7 @@ class Engine:
 
         if len(keyframes) < 10:
             # Not enough keyframes, fall back to random
-            utils.info(f"Found {len(keyframes)} keyframes, adding random points...")
+            self.log(f"Found {len(keyframes)} keyframes, adding random points...")
             return self._add_random_points(keyframes, duration, start_offset, end_offset, target_count=30)
 
         # Sample well-distributed keyframes
@@ -332,7 +350,7 @@ class Engine:
         num_segments = min(20, int(total_scan_time / 45))  # 45 seconds per segment, max 20 segments
         segment_duration = total_scan_time / num_segments if num_segments > 0 else 45
 
-        utils.info(f"Scanning {num_segments} segments ({int(coverage*100)}% coverage of {int(duration/60)}min video)...")
+        self.log(f"Scanning {num_segments} segments ({int(coverage*100)}% coverage of {int(duration/60)}min video)...")
 
         # Evenly distribute segments
         spacing = (analysis_duration - total_scan_time) / (num_segments + 1)
@@ -380,7 +398,7 @@ class Engine:
 
     def _detect_scenes_full(self, v_data: str, duration: float, start_offset: float, end_offset: float) -> list[tuple[float, float]]:
         """Full scene detection for short videos"""
-        utils.info(f"Analyzing full video ({int(duration)}sec)...")
+        self.log(f"Analyzing full video ({int(duration)}sec)...")
 
         command = [
             "ffmpeg",
@@ -471,38 +489,26 @@ class Engine:
         current_sum = 0.0
         end_buffer = 2.0
         
+        all_potential_clips = []
+        
+        # 1. First gather all potential scenes from all sources
         for source in self.sources:
             scenes = self.detect_scenes(source)
-            
             if not scenes:
-                # Fall back to random if no scenes detected
-                utils.info("No scenes detected, falling back to random selection")
-                return self.generate_random_sections()
-            
+                self.log(f"No scenes detected for source {source.get('v_data', '')}, skipping for scene-based sections.")
+                continue
+                
             safe_duration = source["duration"] - config.skip_start - config.skip_end - end_buffer
-            
-            # Sort scenes by position
             scenes.sort()
             
-            # Create clips around scene changes
+            # Create potential clips around scene changes for this source
             for i, scene_time in enumerate(scenes):
-                if current_sum >= target_duration:
-                    break
-                
-                # Determine clip boundaries around scene
                 clip_length = random.triangular(
                     config.min_clip_duration,
                     config.max_clip_duration,
                     config.avg_clip_duration,
                 )
                 
-                if current_sum + clip_length > target_duration:
-                    clip_length = target_duration - current_sum
-                
-                if clip_length < config.min_clip_duration:
-                    continue
-                
-                # Center clip on scene change, but respect boundaries
                 half_clip = clip_length / 2
                 start = max(config.skip_start, scene_time - half_clip)
                 max_start = min(scene_time + half_clip, source["duration"] - config.skip_end - clip_length)
@@ -513,19 +519,69 @@ class Engine:
                 if start < config.skip_start or start + clip_length > source["duration"] - config.skip_end:
                     continue
                 
-                # Calculate scene score (distance from previous scene indicates change intensity)
+                # Calculate scene score
                 scene_score = 0.5
                 if i > 0:
                     scene_score = min(1.0, (scene_time - scenes[i-1]) / 10.0)
                 
-                sections.append(ClipSection(
-                    start=start,
-                    duration=clip_length,
-                    source=source,
-                    scene_score=scene_score,
-                    index=len(sections)
-                ))
-                current_sum += clip_length
+                all_potential_clips.append({
+                    "start": start,
+                    "duration": clip_length,
+                    "source": source,
+                    "scene_score": scene_score
+                })
+
+        if not all_potential_clips:
+            self.log("No clips could be generated from scenes, falling back to random selection")
+            return self.generate_random_sections()
+
+        # 2. Distribute clips equitably across sources by grouping them
+        # Group clips by source URL/v_data
+        clips_by_source = {}
+        for clip in all_potential_clips:
+            src_key = clip["source"]["v_data"]
+            if src_key not in clips_by_source:
+                clips_by_source[src_key] = []
+            clips_by_source[src_key].append(clip)
+            
+        # Shuffle clips within each source so it's not strictly chronological internally unless sorted later
+        for src_key in clips_by_source:
+             random.shuffle(clips_by_source[src_key])
+             # Alternatively, could sort by scene_score descending to get the best scenes from each source first
+             # clips_by_source[src_key].sort(key=lambda x: x["scene_score"], reverse=True)
+             
+        # 3. Round-robin pick clips from sources until duration is met
+        source_keys = list(clips_by_source.keys())
+        idx = 0
+        while current_sum < target_duration and source_keys:
+            key = source_keys[idx % len(source_keys)]
+            
+            if not clips_by_source[key]:
+                source_keys.remove(key)
+                if not source_keys:
+                    break
+                # Mod without incrementing idx correctly points to the "next" source now
+                continue
+                
+            clip = clips_by_source[key].pop(0)
+            
+            # Ensure we don't exceed target duration
+            if current_sum + clip["duration"] > target_duration:
+                clip["duration"] = target_duration - current_sum
+                if clip["duration"] < config.min_clip_duration:
+                    idx += 1
+                    continue
+            
+            sections.append(ClipSection(
+                start=clip["start"],
+                duration=clip["duration"],
+                source=clip["source"],
+                scene_score=clip["scene_score"],
+                index=len(sections)
+            ))
+            
+            current_sum += clip["duration"]
+            idx += 1
         
         return sections
 
@@ -574,21 +630,21 @@ class Engine:
 
     def show_preview(self) -> bool:
         """Show what clips would be extracted without actually doing it"""
-        utils.info(f"\n📋 PREVIEW MODE - {len(self.clip_sections)} clips planned:\n")
+        self.log(f"\n📋 PREVIEW MODE - {len(self.clip_sections)} clips planned:\n")
         
         total_duration = 0.0
         for i, section in enumerate(self.clip_sections, 1):
             source_url = section.source.get("url", "unknown")[:50]
             scene_info = f" (scene score: {section.scene_score:.2f})" if config.scene_detection else ""
             
-            utils.info(f"Clip {i}/{len(self.clip_sections)}: {section.start:.1f}s - {section.start + section.duration:.1f}s "
+            self.log(f"Clip {i}/{len(self.clip_sections)}: {section.start:.1f}s - {section.start + section.duration:.1f}s "
                       f"(duration: {section.duration:.1f}s){scene_info}")
-            utils.info(f"  Source: {source_url}...")
+            self.log(f"  Source: {source_url}...")
             total_duration += section.duration
         
-        utils.info(f"\n✅ Total planned duration: {total_duration:.1f}s")
-        utils.info(f"📝 Use --preview to see this without generating")
-        utils.info(f"🚀 Remove --dry-run to actually generate the video\n")
+        self.log(f"\n✅ Total planned duration: {total_duration:.1f}s")
+        self.log(f"📝 Use --preview to see this without generating")
+        self.log(f"🚀 Remove --dry-run to actually generate the video\n")
         
         return True
 
@@ -621,7 +677,7 @@ class Engine:
             with open(self.state_file, "w") as f:
                 json.dump(state, f, indent=2)
         except Exception as e:
-            utils.error(f"Failed to save state: {e}")
+            self.error(f"Failed to save state: {e}")
 
     def load_state(self) -> bool:
         """Load previous state for resume capability"""
@@ -652,7 +708,7 @@ class Engine:
             return len(self.clip_sections) > 0
             
         except Exception as e:
-            utils.error(f"Failed to load state: {e}")
+            self.error(f"Failed to load state: {e}")
             return False
 
     def get_clip_score(self, clip_path: str) -> float:
@@ -673,7 +729,7 @@ class Engine:
             expected_path = os.path.join(config.project_dir, f"temp_clip_{section.index + 1}.mp4")
             if os.path.exists(expected_path):
                 self.completed_clips += 1
-                utils.info(f"✓ Clip {section.index + 1}/{self.total_clips} already exists")
+                self.log(f"✓ Clip {section.index + 1}/{self.total_clips} already exists")
                 return expected_path
             
             result = self.extract_single_clip(section.index, {
@@ -803,7 +859,7 @@ class Engine:
                 ]
             )
 
-            utils.action(
+            self.log(
                 f"Clip {i + 1}/{self.total_clips} starting at {round(start)}s (Duration: {round(duration)}s) ({mode})"
             )
 
@@ -813,17 +869,17 @@ class Engine:
                 if result.returncode == 0:
                     return name
 
-                utils.error(f"Error extracting clip {i + 1} using {mode}:")
-                utils.error(result.stderr)
+                self.error(f"Error extracting clip {i + 1} using {mode}:")
+                self.error(result.stderr)
 
                 if mode != modes_to_try[-1]:
-                    utils.info(f"Retrying clip {i + 1} with fallback...")
+                    self.log(f"Retrying clip {i + 1} with fallback...")
 
             except Exception as e:
-                utils.error(f"Exception extracting clip {i + 1} using {mode}: {e}")
+                self.error(f"Exception extracting clip {i + 1} using {mode}: {e}")
 
                 if mode != modes_to_try[-1]:
-                    utils.info(f"Retrying clip {i + 1} with fallback...")
+                    self.log(f"Retrying clip {i + 1} with fallback...")
 
         return None
 

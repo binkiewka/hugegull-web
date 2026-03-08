@@ -17,12 +17,15 @@
             <!-- Input Section -->
             <section class="input-section">
                 <div class="form-group">
-                    <label for="url">Video URL(s)</label>
+                    <label for="url">Video URL(s) or Local Path(s)</label>
                     <div id="urlInputs">
-                        <input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />
+                        <input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream or /path/to/video.mp4" />
                     </div>
-                    <button type="button" id="addUrlBtn" class="btn-secondary btn-small">+ Add Another URL</button>
-                    <small>Supports YouTube, Twitch, local files, and HLS streams. Add multiple URLs to combine clips from different sources.</small>
+                    <div class="url-actions">
+                        <button type="button" id="addUrlBtn" class="btn-secondary btn-small">+ Add Another</button>
+                        <button type="button" id="clearUrlsBtn" class="btn-secondary btn-small">🧹 Clear</button>
+                    </div>
+                    <small>Supports YouTube, Twitch, local files, and HLS streams. Add multiple sources to combine clips.</small>
                 </div>
 
                 <div class="form-group">
@@ -46,6 +49,7 @@
                         <button type="button" class="preset-btn" data-preset="tiktok">TikTok/Shorts</button>
                         <button type="button" class="preset-btn" data-preset="instagram">Instagram</button>
                         <button type="button" class="preset-btn" data-preset="twitter">Twitter/X</button>
+                        <button type="button" class="preset-btn" data-preset="default">Default</button>
                     </div>
                 </div>
 
@@ -140,21 +144,13 @@
                 </div>
 
                 <div class="action-buttons">
-                    <button type="button" id="previewBtn" class="btn-secondary">
-                        👁️ Preview
-                    </button>
                     <button type="button" id="generateBtn" class="btn-primary">
                         🎬 Generate Video
                     </button>
                 </div>
             </section>
 
-            <!-- Preview Section -->
-            <section class="preview-section" id="previewSection" style="display: none;">
-                <h2>📋 Planned Clips</h2>
-                <div class="clips-list" id="clipsList"></div>
-                <button type="button" id="closePreviewBtn" class="btn-secondary">Close Preview</button>
-            </section>
+
 
             <!-- Progress Section -->
             <section class="progress-section" id="progressSection" style="display: none;">
@@ -241,7 +237,6 @@
                 
                 <h3>Tips</h3>
                 <ul>
-                    <li>Use "Preview" to see what clips will be extracted</li>
                     <li>Skip intros/outros with Advanced Settings</li>
                     <li>Use GPU encoding for faster processing</li>
                     <li>Sort by "Most Dynamic First" for action highlights</li>

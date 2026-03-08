@@ -1,21 +1,24 @@
 /* HugeGull Web UI Styles - Enhanced */
 
 :root {
-    --bg-primary: #0a0a12;
-    --bg-secondary: #12121f;
-    --bg-tertiary: #1e1e2e;
-    --bg-hover: #2a2a3e;
-    --text-primary: #e8e8f0;
-    --text-secondary: #9ca3af;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
-    --accent-glow: rgba(99, 102, 241, 0.3);
-    --success: #22c55e;
+    --bg-primary级: #08080f;
+    --bg-secondary: rgba(18, 18, 31, 0.7);
+    --bg-tertiary: rgba(30, 30, 46, 0.8);
+    --bg-hover: rgba(42, 42, 62, 0.9);
+    --text-primary: #f0f0f5;
+    --text-secondary: #a1a1aa;
+    --accent: #8b5cf6;
+    --accent-hover: #7c3aed;
+    --accent-glow: rgba(139, 92, 246, 0.4);
+    --success: #10b981;
     --error: #ef4444;
     --warning: #f59e0b;
     --info: #3b82f6;
-    --border: #2d2d44;
-    --border-light: #3d3d5c;
+    --border: rgba(255, 255, 255, 0.1);
+    --border-light: rgba(255, 255, 255, 0.15);
+    
+    /* Backdrop blur for glassmorphism */
+    --backdrop: blur(12px);
 }
 
 * {
@@ -25,8 +28,11 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     background: var(--bg-primary);
+    background-image: radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.1), transparent 25%),
+                      radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.1), transparent 25%);
+    background-attachment: fixed;
     color: var(--text-primary);
     line-height: 1.6;
     min-height: 100vh;
@@ -47,12 +53,22 @@ header {
 }
 
 header h1 {
-    font-size: 2.8rem;
-    margin-bottom: 10px;
-    background: linear-gradient(135deg, var(--accent), #a5b4fc);
+    font-size: 3.2rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent), #d8b4fe, #818cf8);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: gradientText 5s ease infinite;
+}
+
+@keyframes gradientText {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 header p {
@@ -75,20 +91,24 @@ header p {
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 12px 16px;
+    padding: 14px 18px;
     background: var(--bg-secondary);
+    backdrop-filter: var(--backdrop);
+    -webkit-backdrop-filter: var(--backdrop);
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     color: var(--text-primary);
     font-size: 1rem;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-glow);
+    box-shadow: 0 0 0 4px var(--accent-glow), inset 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: rgba(30, 30, 46, 0.85);
 }
 
 .form-group small {
@@ -140,29 +160,37 @@ header p {
 
 .preset-buttons {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .preset-btn {
-    padding: 10px 20px;
+    padding: 12px 24px;
     background: var(--bg-tertiary);
+    backdrop-filter: var(--backdrop);
+    -webkit-backdrop-filter: var(--backdrop);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
     color: var(--text-primary);
     cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .preset-btn:hover {
     background: var(--bg-hover);
     border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .preset-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 15px var(--accent-glow);
 }
 
 /* Buttons */
@@ -174,18 +202,19 @@ header p {
 
 .btn-primary,
 .btn-secondary {
-    padding: 14px 28px;
+    padding: 16px 32px;
     border: none;
-    border-radius: 10px;
-    font-size: 1rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex: 1;
     justify-content: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .btn-small {
@@ -214,14 +243,13 @@ header p {
 }
 
 .btn-primary {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     color: white;
 }
 
 .btn-primary:hover {
-    background: var(--accent-hover);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--accent-glow);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--accent-glow);
 }
 
 .btn-primary:disabled {
@@ -288,10 +316,14 @@ header p {
 
 .advanced-settings {
     background: var(--bg-secondary);
-    border-radius: 12px;
-    padding: 25px;
-    margin-bottom: 20px;
-    animation: slideDown 0.3s ease;
+    backdrop-filter: var(--backdrop);
+    -webkit-backdrop-filter: var(--backdrop);
+    border-radius: 16px;
+    padding: 30px;
+    margin-bottom: 25px;
+    animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .settings-grid {
@@ -364,7 +396,8 @@ header p {
 .clip-time {
     flex: 1;
     text-align: center;
-    font-family: monospace;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 0.95rem;
 }
 
 .clip-score {

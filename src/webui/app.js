@@ -41,6 +41,15 @@ class HugeGullUI {
                 maxClip: 10,
                 aspectRatio: '16:9',
                 outputFormat: 'mp4'
+            },
+            default: {
+                duration: 45,
+                fps: 30,
+                crf: 28,
+                minClip: 3,
+                maxClip: 9,
+                aspectRatio: '',
+                outputFormat: 'mp4'
             }
         };
         this.init();
@@ -77,15 +86,17 @@ class HugeGullUI {
         // Add URL button
         document.getElementById('addUrlBtn').addEventListener('click', () => this.addUrlInput());
 
+        // Clear URLs button
+        document.getElementById('clearUrlsBtn').addEventListener('click', () => this.clearUrls());
+
         // Action buttons
-        document.getElementById('generateBtn').addEventListener('click', () => this.startGeneration(false));
-        document.getElementById('previewBtn').addEventListener('click', () => this.startGeneration(true));
-        document.getElementById('closePreviewBtn').addEventListener('click', () => {
-            document.getElementById('previewSection').style.display = 'none';
-        });
+        document.getElementById('generateBtn').addEventListener('click', () => this.startGeneration());
         document.getElementById('newVideoBtn').addEventListener('click', () => this.reset());
         document.getElementById('retryBtn').addEventListener('click', () => this.reset());
         document.getElementById('resumeBtn').addEventListener('click', () => this.resumeJob());
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            document.getElementById('resultSection').style.display = 'none';
+        });
 
         // Help modal
         document.getElementById('showHelp').addEventListener('click', (e) => {
@@ -117,7 +128,17 @@ class HugeGullUI {
         document.getElementById('minClip').value = preset.minClip;
         document.getElementById('maxClip').value = preset.maxClip;
         document.getElementById('aspectRatio').value = preset.aspectRatio;
+        // Apply settings
+        document.getElementById('duration').value = preset.duration;
+        document.getElementById('fps').value = preset.fps;
+        document.getElementById('crf').value = preset.crf;
+        document.getElementById('minClip').value = preset.minClip;
+        document.getElementById('maxClip').value = preset.maxClip;
+        document.getElementById('aspectRatio').value = preset.aspectRatio;
         document.getElementById('outputFormat').value = preset.outputFormat;
+        
+        // Open Advanced Settings
+        document.getElementById('advancedSettings').style.display = 'block';
     }
 
     addUrlInput() {
@@ -125,8 +146,13 @@ class HugeGullUI {
         const input = document.createElement('input');
         input.type = 'text';
         input.className = 'url-input';
-        input.placeholder = 'https://...';
+        input.placeholder = 'https://... or /path/to/video.mp4';
         container.appendChild(input);
+    }
+
+    clearUrls() {
+        const container = document.getElementById('urlInputs');
+        container.innerHTML = '<input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream or /path/to/video.mp4" />';
     }
 
     getUrls() {
@@ -157,7 +183,7 @@ class HugeGullUI {
         };
     }
 
-    async startGeneration(isPreview) {
+    async startGeneration() {
         const urls = this.getUrls();
         const name = document.getElementById('name').value.trim();
 
@@ -168,14 +194,10 @@ class HugeGullUI {
 
         // Disable buttons and show immediate feedback
         const generateBtn = document.getElementById('generateBtn');
-        const previewBtn = document.getElementById('previewBtn');
         generateBtn.disabled = true;
-        previewBtn.disabled = true;
         generateBtn.innerHTML = '⏳ Starting...';
 
         const settings = this.getSettings();
-        settings.preview = isPreview;
-        settings.dry_run = isPreview;
 
         try {
             const response = await fetch('/api/generate', {
@@ -197,30 +219,23 @@ class HugeGullUI {
 
             // Reset buttons
             generateBtn.disabled = false;
-            previewBtn.disabled = false;
             generateBtn.innerHTML = '🎬 Generate Video';
 
-            if (isPreview) {
-                this.showSection('previewSection');
-                this.connectWebSocket(this.jobId, true);
-            } else {
-                this.showSection('progressSection');
-                // Show initial loading state
-                document.getElementById('progressText').textContent = 'Initializing...';
-                document.getElementById('logOutput').innerHTML = '<div class="log-line info">Starting job ' + this.jobId + '...</div>';
-                this.connectWebSocket(this.jobId, false);
-            }
+            this.showSection('progressSection');
+            // Show initial loading state
+            document.getElementById('progressText').textContent = 'Initializing...';
+            document.getElementById('logOutput').innerHTML = '<div class="log-line info">Starting job ' + this.jobId + '...</div>';
+            this.connectWebSocket(this.jobId);
 
         } catch (err) {
             // Re-enable buttons on error
             generateBtn.disabled = false;
-            previewBtn.disabled = false;
             generateBtn.innerHTML = '🎬 Generate Video';
             this.showError(err.message);
         }
     }
 
-    connectWebSocket(jobId, isPreview) {
+    connectWebSocket(jobId) {
         const wsUrl = `ws://${window.location.host}/ws/${jobId}`;
         this.ws = new WebSocket(wsUrl);
 
@@ -230,11 +245,7 @@ class HugeGullUI {
 
         this.ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            if (isPreview) {
-                this.handlePreviewUpdate(data);
-            } else {
-                this.handleProgressUpdate(data);
-            }
+            this.handleProgressUpdate(data);
         };
 
         this.ws.onerror = (err) => {
@@ -244,28 +255,6 @@ class HugeGullUI {
         this.ws.onclose = () => {
             console.log('WebSocket closed');
         };
-    }
-
-    handlePreviewUpdate(data) {
-        const clipsList = document.getElementById('clipsList');
-        
-        if (data.clips && data.clips.length > 0) {
-            clipsList.innerHTML = data.clips.map((clip, i) => `
-                <div class="clip-item">
-                    <span class="clip-number">Clip ${i + 1}</span>
-                    <span class="clip-time">${clip.start.toFixed(1)}s - ${(clip.start + clip.duration).toFixed(1)}s</span>
-                    ${clip.scene_score ? `<span class="clip-score">Score: ${clip.scene_score.toFixed(2)}</span>` : ''}
-                </div>
-            `).join('');
-        }
-
-        if (data.status === 'completed') {
-            // Preview complete
-        }
-
-        if (data.status === 'failed') {
-            this.showError(data.error || 'Preview failed');
-        }
     }
 
     handleProgressUpdate(data) {
@@ -332,7 +321,7 @@ class HugeGullUI {
     }
 
     showSection(sectionId) {
-        ['previewSection', 'progressSection', 'resultSection', 'errorSection'].forEach(id => {
+        ['progressSection', 'resultSection', 'errorSection'].forEach(id => {
             document.getElementById(id).style.display = 'none';
         });
         
@@ -357,9 +346,8 @@ class HugeGullUI {
             this.ws = null;
         }
         
-        // Clear URL inputs (keep only one)
-        const urlContainer = document.getElementById('urlInputs');
-        urlContainer.innerHTML = '<input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />';
+        // Clear URL inputs
+        this.clearUrls();
         document.getElementById('name').value = '';
         document.getElementById('logOutput').innerHTML = '';
         document.getElementById('clipsList').innerHTML = '';
