@@ -18,7 +18,7 @@ class Engine:
         self.data: dict[str, Any] = {}
         self.clips: list[str] = []
         self.duration = 0.0
-        self.workers = 4
+        self.workers = 8
         self.prepare()
 
     def prepare(self) -> None:
@@ -54,6 +54,9 @@ class Engine:
     def resolve_with_ytdlp(self) -> None:
         command = [
             "yt-dlp",
+            "--no-playlist",      # Skips playlist resolution
+            "--no-warnings",      # Skips printing/processing warnings
+            "--no-comments",      # Skips fetching comment data
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
