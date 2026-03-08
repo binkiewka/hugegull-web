@@ -261,7 +261,7 @@ class Engine:
             return None
 
     def detect_scenes(self, source: dict[str, Any]) -> list[tuple[float, float]]:
-        """Detect scene changes using ffmpeg scene filter"""
+        """Detect scene changes using ffmpeg scene filter with sampling for long videos"""
         v_data = source["v_data"]
         duration = source["duration"]
         
@@ -274,37 +274,65 @@ class Engine:
         
         analysis_duration = duration - start_offset - end_offset
         
-        # Use ffmpeg scene detection
-        command = [
-            "ffmpeg",
-            "-i", v_data,
-            "-vf", f"select='gt(scene,{config.scene_threshold})',showinfo",
-            "-f", "null",
-            "-",
-        ]
+        # For long videos, analyze in chunks to avoid processing entire video
+        max_analysis_time = 300  # 5 minutes max analysis time
+        max_scenes = 50  # Limit number of scenes
         
-        utils.info(f"Detecting scenes (this may take a moment)...")
-        
-        result = subprocess.run(command, capture_output=True, text=True)
+        # Calculate how many segments to sample
+        if analysis_duration > max_analysis_time:
+            # Sample multiple segments throughout the video
+            num_segments = 5
+            segment_duration = max_analysis_time / num_segments
+            segment_starts = [
+                start_offset + (analysis_duration - segment_duration * num_segments) * i / (num_segments - 1)
+                for i in range(num_segments)
+            ]
+            utils.info(f"Sampling {num_segments} segments for scene detection (video is {int(duration/60)}min long)...")
+        else:
+            # Short video - analyze the whole thing
+            segment_starts = [start_offset]
+            segment_duration = analysis_duration
+            utils.info(f"Detecting scenes (this may take a moment)...")
         
         scenes = []
-        for line in result.stderr.split("\n"):
-            if "pts_time:" in line:
-                try:
-                    # Extract timestamp from showinfo output
-                    time_str = line.split("pts_time:")[1].split()[0]
-                    timestamp = float(time_str)
-                    
-                    # Apply skip offsets
-                    timestamp += start_offset
-                    if timestamp < start_offset or timestamp > duration - end_offset:
+        for seg_start in segment_starts:
+            # Use ffmpeg scene detection on segment
+            command = [
+                "ffmpeg",
+                "-ss", str(seg_start),
+                "-t", str(segment_duration),
+                "-i", v_data,
+                "-vf", f"select='gt(scene,{config.scene_threshold})',showinfo",
+                "-f", "null",
+                "-",
+            ]
+            
+            result = subprocess.run(command, capture_output=True, text=True)
+            
+            for line in result.stderr.split("\n"):
+                if "pts_time:" in line:
+                    try:
+                        # Extract timestamp from showinfo output
+                        time_str = line.split("pts_time:")[1].split()[0]
+                        timestamp = float(time_str) + seg_start
+                        
+                        # Apply skip offsets
+                        if timestamp < start_offset or timestamp > duration - end_offset:
+                            continue
+                        
+                        # Avoid duplicates (scenes within 2 seconds)
+                        if not any(abs(timestamp - s) < 2.0 for s in scenes):
+                            scenes.append(timestamp)
+                            
+                        if len(scenes) >= max_scenes:
+                            break
+                    except (IndexError, ValueError):
                         continue
-                    
-                    scenes.append(timestamp)
-                except (IndexError, ValueError):
-                    continue
+            
+            if len(scenes) >= max_scenes:
+                break
         
-        return scenes
+        return sorted(scenes)
 
     def generate_scene_based_sections(self) -> list[ClipSection]:
         """Generate clip sections based on scene detection"""

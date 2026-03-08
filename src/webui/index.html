@@ -17,9 +17,12 @@
             <!-- Input Section -->
             <section class="input-section">
                 <div class="form-group">
-                    <label for="url">Video URL</label>
-                    <input type="text" id="url" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />
-                    <small>Supports YouTube, Twitch, local files, and HLS streams</small>
+                    <label for="url">Video URL(s)</label>
+                    <div id="urlInputs">
+                        <input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />
+                    </div>
+                    <button type="button" id="addUrlBtn" class="btn-secondary btn-small">+ Add Another URL</button>
+                    <small>Supports YouTube, Twitch, local files, and HLS streams. Add multiple URLs to combine clips from different sources.</small>
                 </div>
 
                 <div class="form-group">

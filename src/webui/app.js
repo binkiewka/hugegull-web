@@ -74,6 +74,9 @@ class HugeGullUI {
             }
         });
 
+        // Add URL button
+        document.getElementById('addUrlBtn').addEventListener('click', () => this.addUrlInput());
+
         // Action buttons
         document.getElementById('generateBtn').addEventListener('click', () => this.startGeneration(false));
         document.getElementById('previewBtn').addEventListener('click', () => this.startGeneration(true));
@@ -117,6 +120,25 @@ class HugeGullUI {
         document.getElementById('outputFormat').value = preset.outputFormat;
     }
 
+    addUrlInput() {
+        const container = document.getElementById('urlInputs');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'url-input';
+        input.placeholder = 'https://...';
+        container.appendChild(input);
+    }
+
+    getUrls() {
+        const inputs = document.querySelectorAll('.url-input');
+        const urls = [];
+        inputs.forEach(input => {
+            const url = input.value.trim();
+            if (url) urls.push(url);
+        });
+        return urls;
+    }
+
     getSettings() {
         return {
             duration: parseFloat(document.getElementById('duration').value) || 45,
@@ -136,11 +158,11 @@ class HugeGullUI {
     }
 
     async startGeneration(isPreview) {
-        const url = document.getElementById('url').value.trim();
+        const urls = this.getUrls();
         const name = document.getElementById('name').value.trim();
 
-        if (!url) {
-            alert('Please enter a video URL');
+        if (urls.length === 0) {
+            alert('Please enter at least one video URL');
             return;
         }
 
@@ -153,7 +175,7 @@ class HugeGullUI {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    url,
+                    urls: urls,  // Send array of URLs
                     name: name || undefined,
                     settings
                 })
@@ -316,8 +338,9 @@ class HugeGullUI {
             this.ws = null;
         }
         
-        // Clear inputs
-        document.getElementById('url').value = '';
+        // Clear URL inputs (keep only one)
+        const urlContainer = document.getElementById('urlInputs');
+        urlContainer.innerHTML = '<input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream" />';
         document.getElementById('name').value = '';
         document.getElementById('logOutput').innerHTML = '';
         document.getElementById('clipsList').innerHTML = '';

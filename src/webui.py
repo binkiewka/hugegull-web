@@ -108,12 +108,12 @@ class WebUIEngine(Engine):
         return result
 
 
-def configure_job_config(url: str, name: str, settings: dict) -> None:
+def configure_job_config(urls: list, name: str, settings: dict) -> None:
     """Configure the global config for a job"""
     cfg = config_module.config
     
     # Reset for this job
-    cfg.urls = [url]
+    cfg.urls = urls if isinstance(urls, list) else [urls]
     cfg.name = name or ""
     
     # Apply settings
@@ -140,7 +140,7 @@ def configure_job_config(url: str, name: str, settings: dict) -> None:
     cfg.dry_run = settings.get("dry_run", False)
 
 
-async def run_generation(job_id: str, url: str, name: str, settings: dict) -> None:
+async def run_generation(job_id: str, urls: list, name: str, settings: dict) -> None:
     """Run video generation in background"""
     job = jobs[job_id]
     job.status = "running"
@@ -148,7 +148,7 @@ async def run_generation(job_id: str, url: str, name: str, settings: dict) -> No
     
     try:
         # Configure the global config for this job
-        configure_job_config(url, name, settings)
+        configure_job_config(urls, name, settings)
         cfg = config_module.config
         
         job.log(f"Starting: {cfg.name or 'video'} | {int(cfg.duration)}s")
@@ -252,26 +252,32 @@ async def get_job_status(job_id: str):
 @app.post("/api/generate")
 async def generate_video(background_tasks: BackgroundTasks, request: dict):
     """Start a new video generation job"""
-    url = request.get("url")
+    urls = request.get("urls", [])
+    # Support legacy single url param
+    if not urls and request.get("url"):
+        urls = [request.get("url")]
     name = request.get("name")
     settings = request.get("settings", {})
     
-    if not url:
-        raise HTTPException(status_code=400, detail="URL is required")
+    if not urls or len(urls) == 0:
+        raise HTTPException(status_code=400, detail="At least one URL is required")
     
     job_id = str(uuid.uuid4())[:8]
+    
+    # Store first URL for display, but all URLs will be processed
+    display_url = urls[0] if urls else ""
     
     job = JobStatus(
         job_id=job_id,
         status="pending",
-        url=url,
+        url=display_url,
         name=name or f"job_{job_id}",
         is_preview=settings.get("preview", False) or settings.get("dry_run", False),
     )
     jobs[job_id] = job
     
     # Start background task
-    background_tasks.add_task(run_generation, job_id, url, name or f"job_{job_id}", settings)
+    background_tasks.add_task(run_generation, job_id, urls, name or f"job_{job_id}", settings)
     
     return {"job_id": job_id, "status": "pending", "name": job.name, "is_preview": job.is_preview}
 
