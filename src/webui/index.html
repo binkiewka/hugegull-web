@@ -8,6 +8,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        /* Force dark theme onto native select elements */
+        select option {
+            background-color: #1a1a1a;
+            color: #e2e8f0;
+        }
+    </style>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -223,17 +230,15 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro</label>
+                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro (SEC)</label>
                                 <div class="relative">
-                                    <input id="skipStart" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 pl-3 pr-12 text-sm focus:ring-0" type="number" value="0" min="0" />
-                                    <span class="absolute right-8 top-2.5 text-[10px] text-slate-500 font-bold pointer-events-none">SEC</span>
+                                    <input id="skipStart" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipEnd">Skip Outro</label>
+                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipEnd">Skip Outro (SEC)</label>
                                 <div class="relative">
-                                    <input id="skipEnd" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 pl-3 pr-12 text-sm focus:ring-0" type="number" value="0" min="0" />
-                                    <span class="absolute right-8 top-2.5 text-[10px] text-slate-500 font-bold pointer-events-none">SEC</span>
+                                    <input id="skipEnd" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
                                 </div>
                             </div>
                         </div>
@@ -250,10 +255,9 @@
                 <section id="advancedSettings" style="display: none;" class="glass-panel p-6 rounded-xl space-y-6">
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
-                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="duration">Total Duration</label>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="duration">Total Duration (SEC)</label>
                             <div class="relative">
-                                <input id="duration" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 pl-3 pr-12 text-sm focus:ring-1 focus:ring-primary/40 transition-all" type="number" value="45" min="5" max="300" />
-                                <span class="absolute right-8 top-2.5 text-[10px] text-slate-500 font-bold pointer-events-none">SEC</span>
+                                <input id="duration" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="45" min="5" max="300" />
                             </div>
                         </div>
 
