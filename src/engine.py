@@ -233,6 +233,12 @@ class Engine:
 
             af_filter = f"afade=t=in:st=0:d={config.fade},afade=t=out:st={fade_out_start}:d={config.fade}"
 
+            # Ensure we only take exactly one video and one audio stream
+            if is_split_stream:
+                command.extend(["-map", "0:v:0", "-map", "1:a:0"])
+            else:
+                command.extend(["-map", "0:v:0", "-map", "0:a:0?"])
+
             command.extend(
                 [
                     "-t",
@@ -257,10 +263,15 @@ class Engine:
                     ["-c:v", "libx264", "-preset", "veryfast", "-crf", str(config.crf)]
                 )
 
+            # Force uniform audio attributes across all extracted clips
             command.extend(
                 [
                     "-c:a",
                     "aac",
+                    "-ar",
+                    "48000",
+                    "-ac",
+                    "2",
                     "-video_track_timescale",
                     "90000",
                     "-y",
