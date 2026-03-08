@@ -258,7 +258,7 @@ class Engine:
             key=lambda x: int(os.path.basename(x).split("_")[2].split(".")[0])
         )
 
-    def concatenate_clips(self) -> None:
+    def concatenate_clips(self) -> bool:
         if not self.clips:
             utils.error("No clips to concatenate.")
             return False
