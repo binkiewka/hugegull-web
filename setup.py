@@ -12,6 +12,7 @@ setup(
         "console_scripts": [
             "hugegull = main:main",
             "hugegull-web = webui:main",
+            "hugegull-setup = setup_wizard:main",
         ],
     },
     install_requires=[

@@ -1,62 +1,189 @@
 ![](seagulls.jpg)
 
-This gets random sections from a stream video.
+# HugeGull
 
-Each section is of variable duration.
+Generate smart clip compilations from video streams.
 
-Then it joins them into a single video.
+## ✨ Features
 
-Argument 1 is url.
+- 🎬 **Smart Scene Detection** - Find actual scene changes instead of random timestamps
+- 👁️ **Preview Mode** - See planned clips before generating
+- ⏭️ **Skip Intros/Outros** - Exclude unwanted sections automatically
+- 🔄 **Resume Support** - Continue interrupted jobs
+- 🌐 **Web UI** - Browser interface with real-time progress
+- 📐 **Multiple Formats** - 16:9, 9:16 (vertical), 1:1, 4:5 aspect ratios
+- 🚀 **GPU Acceleration** - NVIDIA, AMD, and Intel Quick Sync support
 
-Argument 2 is name.
+## 🚀 Quick Start
 
-You can use the `HUGE_URL` env var.
+### Interactive Setup (Recommended for first-time users)
 
-You can use the `HUGE_NAME` env var.
-
-The name can be ommitted to use a random one.
-
-`--open` can be used to open the file when ready.
-
-## Installation
-
-### Automatic (Recommended)
-
-You can simply use `pipx`:
-
-`pipx install git+https://github.com/madprops/hugegull --force`
-
-### Manual
-
-git clone this somewhere.
-
-Make a shell alias:
-
-`alias hgg="python ~/code/hugegull/main.py"`
-
-## Configuration
-
-Edit `~/.config/hugegull/hugegull.toml`
-
-It is empty but you can make it look like this:
-
+```bash
+pipx install git+https://github.com/madprops/hugegull --force
+hugegull-setup
 ```
-path = "/home/memphis/toilet"
+
+The setup wizard will help you configure:
+- Output directory
+- Default video settings
+- GPU encoding
+- Scene detection preferences
+
+### Manual Installation
+
+```bash
+pipx install git+https://github.com/madprops/hugegull --force
+```
+
+Or clone and install:
+```bash
+git clone https://github.com/madprops/hugegull.git
+cd hugegull
+pip install -e .
+```
+
+## 📝 Usage
+
+### Basic CLI
+
+```bash
+# Basic usage
+hugegull https://youtube.com/watch?v=... highlights
+
+# With scene detection (smart cuts)
+hugegull https://youtube.com/watch?v=... --scene-detection
+
+# Preview mode (see what clips will be extracted)
+hugegull https://youtube.com/watch?v=... --preview
+
+# Skip intro and outro
+hugegull stream.m3u8 --skip-start 30 --skip-end 60
+
+# Vertical video for TikTok/Shorts
+hugegull https://youtube.com/watch?v=... --aspect-ratio 9:16
+
+# Resume interrupted job
+hugegull https://youtube.com/watch?v=... --resume
+```
+
+### Web UI
+
+```bash
+hugegull-web
+# Open http://localhost:8080 in your browser
+```
+
+The web UI includes:
+- Visual clip preview
+- Preset configurations (YouTube, TikTok, Instagram)
+- Real-time progress tracking
+- Scene detection toggle
+- Drag-and-drop URL input
+
+### Environment Variables
+
+```bash
+export HUGE_URL="https://stream.m3u8"
+export HUGE_NAME="my_video"
+hugegull  # Uses env vars
+```
+
+## ⚙️ Configuration
+
+Edit `~/.config/hugegull/config.toml`:
+
+```toml
+# Output settings
+path = "/home/user/Videos/hugegull"
 duration = 45
 fps = 30
-crf = 30
-gpu = "amd"
+crf = 28  # Quality: 18-35 (lower = better)
+
+# GPU encoding: "nvidia", "amd", "intel", or "" for CPU
+gpu = "nvidia"
+
+# Clip duration range
+min_clip_duration = 3.0
+avg_clip_duration = 6.0
+max_clip_duration = 9.0
+
+# Scene detection
+scene_detection = false
+scene_threshold = 0.3
+
+# Skip intros/outros (seconds)
+skip_start = 0
+skip_end = 0
+
+# Fade between clips
+fade = 0.03
 ```
 
-## Usage
-
-`hugegull https://something.m3u8 --open`
-
-Local, YouTube, and Twitch video urls work as well.
-
-Or:
+## 🎬 Command Line Options
 
 ```
-export HUGE_URL="https://something.m3u8"
-hugegull
+Core options:
+  --config <path>          Use custom config file
+  --gpu <type>             GPU encoding: amd, nvidia, intel
+  --open                   Open video when complete
+
+Scene detection:
+  --scene-detection        Detect scene changes (smart cuts)
+  --scene-threshold <n>    Sensitivity (0.1-0.5, default: 0.3)
+  --sort-by scene_score    Sort clips by action intensity
+
+Preview & planning:
+  --preview, --dry-run     Show planned clips without generating
+
+Skip intros/outros:
+  --skip-start <sec>       Skip first N seconds
+  --skip-end <sec>         Skip last N seconds
+
+Resume & ordering:
+  --resume                 Resume interrupted job
+  --shuffle                Randomize clip order
+  --sort-by <method>       Sort: index, scene_score, random
+
+Output options:
+  --aspect-ratio <ratio>   16:9, 9:16, 1:1, 4:5
+  --format <ext>           mp4, webm, mov
+
+Web UI:
+  hugegull-web             Start web interface
+  
+Setup:
+  hugegull-setup           Run interactive setup wizard
 ```
+
+## 🎯 Examples
+
+### YouTube Highlights
+```bash
+hugegull https://youtube.com/watch?v=... --scene-detection --duration 60
+```
+
+### TikTok/Shorts Compilation
+```bash
+hugegull https://youtube.com/watch?v=... --aspect-ratio 9:16 --duration 30
+```
+
+### Stream Highlights (Skip intro)
+```bash
+hugegull https://twitch.tv/videos/... --skip-start 120 --scene-detection
+```
+
+### Batch Processing with Web UI
+```bash
+hugegull-web
+# Open browser, paste multiple URLs, queue them up
+```
+
+## 🔧 Requirements
+
+- Python 3.8+
+- ffmpeg
+- yt-dlp (optional, for YouTube/Twitch support)
+
+## 📄 License
+
+MIT License - See LICENSE file
