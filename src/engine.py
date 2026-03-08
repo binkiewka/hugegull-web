@@ -31,12 +31,7 @@ class Engine:
 
     def prepare_sources(self) -> None:
         for url in config.urls:
-            source = {
-                "url": url,
-                "v_data": url,
-                "a_url": None,
-                "duration": 0.0
-            }
+            source = {"url": url, "v_data": url, "a_url": None, "duration": 0.0}
 
             if os.path.isfile(url):
                 source["duration"] = self.get_stream_duration(url)
@@ -60,7 +55,10 @@ class Engine:
         self.prepare_sources()
 
         if len(self.sources) == 0:
-            utils.info("No valid sources found in the pool. Stream is live/endless or invalid.")
+            utils.info(
+                "No valid sources found in the pool. Stream is live/endless or invalid."
+            )
+
             shutil.rmtree(config.project_dir, ignore_errors=True)
             return False
 
@@ -98,22 +96,18 @@ class Engine:
                     v_data = metadata["requested_formats"][0]["url"]
                     a_url = metadata["requested_formats"][1]["url"]
 
-                    return {
-                        "v_data": v_data,
-                        "a_url": a_url,
-                        "duration": duration
-                    }
+                    return {"v_data": v_data, "a_url": a_url, "duration": duration}
                 else:
                     return {
                         "v_data": metadata["requested_formats"][0]["url"],
                         "a_url": None,
-                        "duration": duration
+                        "duration": duration,
                     }
             else:
                 return {
                     "v_data": metadata.get("url"),
                     "a_url": None,
-                    "duration": duration
+                    "duration": duration,
                 }
 
         except Exception as e:
@@ -148,20 +142,12 @@ class Engine:
                 continue
 
             start = random.uniform(0, max_start)
-
-            sections.append({
-                "start": start,
-                "duration": clip_length,
-                "source": source
-            })
-
+            sections.append({"start": start, "duration": clip_length, "source": source})
             current_sum += clip_length
 
         return sections
 
-    def extract_single_clip(
-        self, i: int, section: dict[str, Any]
-    ) -> str | None:
+    def extract_single_clip(self, i: int, section: dict[str, Any]) -> str | None:
         source = section["source"]
         start = section["start"]
         duration = section["duration"]
@@ -270,9 +256,7 @@ class Engine:
             futures = []
 
             for i in range(len(sections)):
-                future = executor.submit(
-                    self.extract_single_clip, i, sections[i]
-                )
+                future = executor.submit(self.extract_single_clip, i, sections[i])
 
                 futures.append(future)
 
@@ -348,5 +332,6 @@ class Engine:
                 return float(metadata["format"]["duration"])
 
         return 0.0
+
 
 engine = Engine()
