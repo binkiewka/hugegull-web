@@ -8,6 +8,7 @@ from __future__ import annotations
 #  |_|  |_|\____/ \_____||______|   \_____|\____/|______|______|
 
 import sys
+import time
 
 from config import config
 from utils import utils
@@ -34,7 +35,11 @@ def main() -> None:
         show_info()
         sys.exit(1)
 
+    start_time = time.perf_counter()
     engine.start()
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    utils.info(f"Done in {duration:.4f} seconds")
 
     if config.open:
         utils.open_file(engine.file)

@@ -126,7 +126,9 @@ class Engine:
 
         return sections
 
-    def extract_single_clip(self, i: int, section: dict[str, Any], is_split_stream: bool, v_data: str) -> str | None:
+    def extract_single_clip(
+        self, i: int, section: dict[str, Any], is_split_stream: bool, v_data: str
+    ) -> str | None:
         start = section["start"]
         duration = section["duration"]
         name = os.path.join(config.project_dir, f"temp_clip_{i + 1}.mp4")
@@ -170,11 +172,17 @@ class Engine:
             )
 
             if mode == "amd":
-                command.extend(["-c:v", "h264_vaapi", "-global_quality", str(config.crf)])
+                command.extend(
+                    ["-c:v", "h264_vaapi", "-global_quality", str(config.crf)]
+                )
             elif mode == "nvidia":
-                command.extend(["-c:v", "h264_nvenc", "-cq", str(config.crf), "-preset", "p4"])
+                command.extend(
+                    ["-c:v", "h264_nvenc", "-cq", str(config.crf), "-preset", "p4"]
+                )
             else:
-                command.extend(["-c:v", "libx264", "-preset", "veryfast", "-crf", str(config.crf)])
+                command.extend(
+                    ["-c:v", "libx264", "-preset", "veryfast", "-crf", str(config.crf)]
+                )
 
             command.extend(
                 [
