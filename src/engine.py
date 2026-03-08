@@ -116,17 +116,31 @@ class Engine:
         return self.concatenate_clips()
 
     def resolve_with_ytdlp(self, url: str) -> dict[str, Any] | None:
-        command = [
-            "yt-dlp",
-            "--no-playlist",
-            "--no-warnings",
-            "-f",
-            "bestvideo[height<=1080]+bestaudio/best",
-            "--dump-json",
-            url,
-        ]
+        browsers_to_try = [None, "firefox", "chrome", "edge", "brave"]
+        result = None
 
-        result = subprocess.run(command, capture_output=True, text=True)
+        for browser in browsers_to_try:
+            command = [
+                "yt-dlp",
+                "--no-playlist",
+                "--no-warnings",
+                "-f",
+                "bestvideo[height<=1080]+bestaudio/best",
+                "--dump-json",
+                url,
+            ]
+
+            if browser is not None:
+                command.insert(3, "--cookies-from-browser")
+                command.insert(4, browser)
+
+            result = subprocess.run(command, capture_output=True, text=True)
+
+            if result.returncode == 0:
+                break
+
+        if result is None:
+            return None
 
         if result.returncode != 0:
             utils.error(f"Error resolving URL {url}. yt-dlp output:")
