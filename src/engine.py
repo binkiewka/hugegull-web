@@ -17,6 +17,8 @@ class Engine:
         self.sources: list[dict[str, Any]] = []
         self.clips: list[str] = []
         self.workers = 8
+        self.max_width = 0
+        self.max_height = 0
 
     def prepare(self) -> None:
         os.makedirs(config.project_dir, exist_ok=True)
@@ -31,18 +33,34 @@ class Engine:
 
     def prepare_sources(self) -> None:
         for url in config.urls:
-            source = {"url": url, "v_data": url, "a_url": None, "duration": 0.0}
+            source = {
+                "url": url,
+                "v_data": url,
+                "a_url": None,
+                "duration": 0.0,
+                "width": 0,
+                "height": 0
+            }
 
             if os.path.isfile(url):
-                source["duration"] = self.get_stream_duration(url)
+                info = self.get_stream_info(url)
+                source.update(info)
             else:
                 if utils.is_site(url):
                     yt_data = self.resolve_with_ytdlp(url)
 
                     if yt_data is not None:
                         source.update(yt_data)
+
+                        info = self.get_stream_info(source["v_data"])
+                        source["width"] = info["width"]
+                        source["height"] = info["height"]
+
+                        if source["duration"] == 0.0:
+                            source["duration"] = info["duration"]
                 else:
-                    source["duration"] = self.get_stream_duration(url)
+                    info = self.get_stream_info(url)
+                    source.update(info)
 
             raw_duration = source["duration"]
             duration = 0.0
@@ -53,10 +71,19 @@ class Engine:
                 except ValueError:
                     duration = 0.0
 
-            if duration > 0:
+            width = source.get("width", 0)
+            height = source.get("height", 0)
+
+            if duration > 0 and width > 0 and height > 0:
                 self.sources.append(source)
+
+                if width > self.max_width:
+                    self.max_width = width
+
+                if height > self.max_height:
+                    self.max_height = height
             else:
-                utils.info(f"Could not determine duration for {url}, skipping.")
+                utils.info(f"Could not determine valid data for {url}, skipping.")
 
     def start(self) -> bool:
         utils.info(f"Starting: {config.name} | {int(config.duration)}s")
@@ -190,7 +217,16 @@ class Engine:
                 command.extend(["-ss", str(start), "-i", a_url])
 
             fade_out_start = duration - config.fade
-            vf_filter = f"fps={config.fps}"
+            pad_w = self.max_width
+            pad_h = self.max_height
+
+            if pad_w % 2 != 0:
+                pad_w += 1
+
+            if pad_h % 2 != 0:
+                pad_h += 1
+
+            vf_filter = f"scale={pad_w}:{pad_h}:force_original_aspect_ratio=decrease,pad={pad_w}:{pad_h}:(ow-iw)/2:(oh-ih)/2,fps={config.fps},setsar=1"
 
             if mode == "amd":
                 vf_filter = f"{vf_filter},format=nv12,hwupload"
@@ -318,7 +354,7 @@ class Engine:
 
         return True
 
-    def get_stream_duration(self, url: str) -> float:
+    def get_stream_info(self, url: str) -> dict[str, Any]:
         command = [
             "ffprobe",
             "-v",
@@ -326,21 +362,33 @@ class Engine:
             "-print_format",
             "json",
             "-show_format",
+            "-show_streams",
             url,
         ]
 
         result = subprocess.run(command, capture_output=True, text=True)
+        info = {"duration": 0.0, "width": 0, "height": 0}
 
         if result.returncode != 0:
-            return 0.0
+            return info
 
-        metadata = json.loads(result.stdout)
+        try:
+            metadata = json.loads(result.stdout)
 
-        if "format" in metadata:
-            if "duration" in metadata["format"]:
-                return float(metadata["format"]["duration"])
+            if "format" in metadata:
+                if "duration" in metadata["format"]:
+                    info["duration"] = float(metadata["format"]["duration"])
 
-        return 0.0
+            if "streams" in metadata:
+                for stream in metadata["streams"]:
+                    if stream.get("codec_type") == "video":
+                        info["width"] = int(stream.get("width", 0))
+                        info["height"] = int(stream.get("height", 0))
+                        break
+        except Exception:
+            pass
+
+        return info
 
 
 engine = Engine()
