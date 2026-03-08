@@ -54,9 +54,9 @@ class Engine:
     def resolve_with_ytdlp(self) -> None:
         command = [
             "yt-dlp",
-            "--no-playlist",      # Skips playlist resolution
-            "--no-warnings",      # Skips printing/processing warnings
-            "--no-comments",      # Skips fetching comment data
+            "--no-playlist",  # Skips playlist resolution
+            "--no-warnings",  # Skips printing/processing warnings
+            "--no-comments",  # Skips fetching comment data
             "-f",
             "bestvideo[height<=1080]+bestaudio/best",
             "--dump-json",
@@ -236,7 +236,9 @@ class Engine:
         else:
             v_data = self.url
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.workers) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.workers
+        ) as executor:
             futures = []
 
             for i in range(len(sections)):
