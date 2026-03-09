@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>HugeGull - Video Generator Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <style>
+        /* Force dark theme onto native select elements */
+        select option {
+            background-color: #1a1a1a;
+            color: #e2e8f0;
+        }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b77f",
+                        "background-light": "#f6f8f7",
+                        "background-dark": "#0a0a0a",
+                        "surface-dark": "#141414",
+                        "accent-dark": "#1c2723",
+                    },
+                    fontFamily: {
+                        "display": ["Spline Sans", "sans-serif"]
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        body { font-family: "Spline Sans", sans-serif; }
+        .glass-panel {
+            @apply bg-[rgba(20,20,20,0.7)] backdrop-blur-md border border-white/5;
+        }
+        .neo-gradient {
+            background: linear-gradient(135deg, #10b77f 0%, #059669 100%);
+        }
+        .url-input {
+            @apply w-full bg-black/40 border border-white/10 rounded-lg h-11 px-4 text-sm focus:border-primary focus:ring-1 focus:ring-primary/50 text-slate-100 placeholder:text-slate-600 mb-2;
+        }
+        
+        /* Make presets active style glow in green */
+        .preset-btn.active {
+            @apply bg-primary/20 text-primary border-primary shadow-[0_0_15px_rgba(16,183,127,0.3)];
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+    <!-- Header -->
+    <header class="flex items-center justify-between border-b border-white/5 px-8 py-4 bg-surface-dark/50 sticky top-0 z-50 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <div class="size-8 bg-primary rounded-lg flex items-center justify-center text-background-dark">
+                <span class="material-symbols-outlined font-bold">flight_takeoff</span>
+            </div>
+            <div class="flex flex-col">
+                <h1 class="text-white text-xl font-extrabold leading-tight tracking-tight">HugeGull</h1>
+                <p class="text-slate-400 text-xs font-medium">Smart Stream Architecture</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-6 text-sm">
+            <a href="https://github.com/binkiewka/hugegull-web" target="_blank" class="text-slate-400 hover:text-white transition-colors">GitHub</a>
+            <a href="#" id="showHelp" class="text-slate-400 hover:text-white transition-colors">Help</a>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full px-6 py-10 space-y-8">
+        <!-- Hero Title -->
+        <div class="space-y-2">
+            <h2 class="text-white text-4xl font-black tracking-tight">Generate smart clip compilations</h2>
+            <p class="text-slate-400 text-lg">Harness AI to detect peaks and key moments from any video stream automatically.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Column: Primary Inputs -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Input Section -->
+                <section class="glass-panel p-6 rounded-xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-white font-bold flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-xl">link</span>
+                            Input Sources
+                        </h3>
+                        <div class="flex gap-2">
+                            <button id="addUrlBtn" class="h-8 px-3 rounded-lg bg-primary/10 text-primary text-xs font-bold flex items-center gap-1 hover:bg-primary/20 transition-all">
+                                <span class="material-symbols-outlined text-sm">add</span> Add Another
+                            </button>
+                            <button id="clearUrlsBtn" class="h-8 px-3 rounded-lg bg-white/5 text-slate-400 text-xs font-bold flex items-center gap-1 hover:bg-white/10 transition-all">
+                                <span class="material-symbols-outlined text-sm">delete_sweep</span> Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="urlInputs">
+                        <input type="text" class="url-input" placeholder="https://youtube.com/watch?v=... or .m3u8 stream or /path/to/video.mp4" />
+                    </div>
+
+                    <div class="pt-2">
+                        <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-2" for="name">Output Name (optional)</label>
+                        <input id="name" class="w-full bg-black/40 border border-white/10 rounded-lg h-11 px-4 text-sm focus:border-primary focus:ring-0" placeholder="Leave empty to use video title" type="text"/>
+                    </div>
+                </section>
+
+                <!-- Presets -->
+                <section class="glass-panel p-6 rounded-xl space-y-6">
+                    <div>
+                        <h3 class="text-white font-bold mb-4 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+                            Quick Presets
+                        </h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="preset-btn px-5 py-2 rounded-full border border-white/10 bg-white/5 text-slate-300 text-xs font-bold transition-all hover:bg-primary/20 hover:text-primary" data-preset="default">Default</button>
+                            <button class="preset-btn px-5 py-2 rounded-full bg-white/5 text-slate-300 border border-white/10 text-xs font-bold hover:bg-primary/20 hover:text-primary transition-all" data-preset="youtube">YouTube</button>
+                            <button class="preset-btn px-5 py-2 rounded-full bg-white/5 text-slate-300 border border-white/10 text-xs font-bold hover:bg-primary/20 hover:text-primary transition-all" data-preset="tiktok">TikTok/Shorts</button>
+                            <button class="preset-btn px-5 py-2 rounded-full bg-white/5 text-slate-300 border border-white/10 text-xs font-bold hover:bg-primary/20 hover:text-primary transition-all" data-preset="instagram">Instagram</button>
+                            <button class="preset-btn px-5 py-2 rounded-full bg-white/5 text-slate-300 border border-white/10 text-xs font-bold hover:bg-primary/20 hover:text-primary transition-all" data-preset="twitter">Twitter/X</button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-white/5 pt-6">
+                        <label class="block text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">Custom Presets</label>
+                        <div class="flex gap-3">
+                            <select id="customPresetSelect" class="flex-1 bg-black/40 border border-white/10 rounded-lg h-11 px-4 text-sm text-slate-300 focus:ring-0 focus:border-primary appearance-none">
+                                <option value="">-- Select a custom preset --</option>
+                            </select>
+                            <button id="applyPresetBtn" style="display: none;" class="h-11 px-4 flex items-center justify-center bg-primary/20 rounded-lg border border-primary/20 text-primary hover:bg-primary/30 transition-all font-bold text-sm" title="Apply Preset">
+                                Apply
+                            </button>
+                            <button id="savePresetBtn" class="size-11 flex items-center justify-center bg-white/5 rounded-lg border border-white/10 text-primary hover:bg-primary/10 transition-all" title="Save Current">
+                                <span class="material-symbols-outlined">save</span>
+                            </button>
+                            <button id="deletePresetBtn" style="display: none;" class="size-11 flex items-center justify-center bg-white/5 rounded-lg border border-white/10 text-rose-500 hover:bg-rose-500/10 transition-all" title="Delete Preset">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Status/Progress Sections (Hidden by default) -->
+                <!-- Progress Section -->
+                <section id="progressSection" style="display: none;" class="glass-panel p-6 rounded-xl space-y-4 border-primary/30 shadow-[0_0_30px_rgba(16,183,127,0.1)]">
+                    <h2 class="text-white font-bold flex items-center gap-2 text-xl">
+                        <span class="material-symbols-outlined text-primary animate-spin">hourglass_top</span>
+                        Generating...
+                    </h2>
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-400">
+                        <span id="progressText">Clip 0 of 0</span>
+                        <span id="progressPercent" class="text-primary">0%</span>
+                    </div>
+                    <div class="w-full bg-black/40 rounded-full h-3 overflow-hidden border border-white/10">
+                        <div id="progressFill" class="bg-primary h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                    <div id="logOutput" class="w-full h-32 bg-black/60 rounded-lg font-mono text-[10px] text-slate-400 p-3 overflow-y-auto whitespace-pre-wrap border border-white/5"></div>
+                </section>
+
+                <!-- Result Section -->
+                <section id="resultSection" style="display: none;" class="neo-gradient p-8 rounded-xl text-background-dark shadow-xl text-center space-y-6">
+                    <h2 class="font-black text-3xl flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-4xl">check_circle</span>
+                        Complete!
+                    </h2>
+                    <div class="flex justify-center gap-4">
+                        <a id="downloadBtn" href="#" download class="px-6 py-3 bg-background-dark text-primary rounded-lg font-bold shadow-lg hover:bg-black transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined">download</span> Download Video
+                        </a>
+                        <button id="newVideoBtn" class="px-6 py-3 bg-white/20 text-background-dark rounded-lg font-bold hover:bg-white/30 transition-all flex items-center gap-2">
+                            <span class="material-symbols-outlined">refresh</span> Generate Another
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Error Section -->
+                <section id="errorSection" style="display: none;" class="glass-panel p-6 rounded-xl space-y-4 border-rose-500/30">
+                    <h2 class="text-rose-500 font-bold flex items-center gap-2 text-xl">
+                        <span class="material-symbols-outlined">error</span>
+                        Task Failed
+                    </h2>
+                    <p id="errorMessage" class="text-slate-300 text-sm p-4 bg-black/40 rounded border border-white/5"></p>
+                    <div class="flex gap-3">
+                        <button id="retryBtn" class="px-5 py-2 bg-white/5 rounded-lg text-slate-200 border border-white/10 hover:bg-white/10 text-sm font-bold transition-all">
+                            Try Again
+                        </button>
+                        <button id="resumeBtn" style="display: none;" class="px-5 py-2 bg-primary/20 text-primary border border-primary/20 rounded-lg hover:bg-primary/30 text-sm font-bold transition-all">
+                            Resume
+                        </button>
+                    </div>
+                </section>
+                
+                <!-- Recent Jobs -->
+                <section class="glass-panel p-6 rounded-xl space-y-4">
+                    <h3 class="text-white font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-400">history</span>
+                        Recent Jobs
+                    </h3>
+                    <div id="jobsList" class="space-y-2">
+                        <p class="text-slate-500 text-sm py-4 text-center border border-dashed border-white/10 rounded-lg">No jobs yet</p>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Right Column: Settings & Logic -->
+            <div class="space-y-6">
+                <!-- Global Logic -->
+                <section class="glass-panel p-6 rounded-xl space-y-4">
+                    <div>
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="sortBy">Clip Ordering</label>
+                        <select id="sortBy" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300 focus:ring-0">
+                            <option value="index">Original Order</option>
+                            <option value="random">Random Shuffle</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro (SEC)</label>
+                            <div class="relative">
+                                <input id="skipStart" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipEnd">Skip Outro (SEC)</label>
+                            <div class="relative">
+                                <input id="skipEnd" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="flex justify-end">
+                    <button id="toggleAdvanced" class="text-xs text-slate-400 hover:text-white uppercase font-bold tracking-widest flex items-center gap-1 transition-colors">
+                        <span class="material-symbols-outlined text-sm">tune</span> Toggle Advanced Config
+                    </button>
+                </div>
+
+                <!-- Advanced Settings Grid -->
+                <section id="advancedSettings" style="display: none;" class="glass-panel p-6 rounded-xl space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="duration">Total Duration (SEC)</label>
+                            <div class="relative">
+                                <input id="duration" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="45" min="5" max="300" />
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="fps">Target FPS</label>
+                            <input id="fps" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm" type="number" value="30" min="15" max="60"/>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="crf">Quality (CRF)</label>
+                            <input id="crf" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm" max="35" min="18" type="number" value="28"/>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="aspectRatio">Aspect Ratio</label>
+                            <select id="aspectRatio" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300">
+                                <option value="">Original</option>
+                                <option value="16:9">16:9 (YouTube)</option>
+                                <option value="9:16">9:16 (TikTok/Shorts)</option>
+                                <option value="1:1">1:1 (Instagram)</option>
+                                <option value="4:5">4:5 (Portrait)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="minClip">Min Clip</label>
+                            <input id="minClip" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm" type="number" value="3" min="1" max="30" step="0.5" />
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="maxClip">Max Clip</label>
+                            <input id="maxClip" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm" type="number" value="9" min="1" max="60" step="0.5" />
+                        </div>
+
+                        <div class="space-y-1 col-span-2">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="outputFormat">Format</label>
+                            <select id="outputFormat" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300">
+                                <option value="mp4">MP4</option>
+                                <option value="webm">WebM</option>
+                                <option value="mov">MOV</option>
+                            </select>
+                        </div>
+                        
+                        <div class="space-y-1 col-span-2">
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest" for="gpu">GPU Encoding</label>
+                            <select id="gpu" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300">
+                                <option value="">CPU (software)</option>
+                                <option value="nvidia">NVIDIA (NVENC)</option>
+                                <option value="amd">AMD (VAAPI)</option>
+                                <option value="intel">Intel (Quick Sync)</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Final Action -->
+                <div class="pt-4 pb-20 space-y-4">
+                    <div class="flex items-center justify-between glass-panel p-4 rounded-xl border border-primary/20 bg-primary/5">
+                        <div>
+                            <label class="block text-white font-bold mb-1">Batch Generation</label>
+                            <p class="text-xs text-slate-400">Number of unique videos to create sequentially.</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input id="jobCount" class="w-20 bg-black/60 border border-white/10 text-center rounded-lg h-10 font-bold focus:ring-1 focus:border-primary text-white" type="number" min="1" max="100" value="1" />
+                        </div>
+                    </div>
+
+                    <button id="generateBtn" class="w-full neo-gradient hover:scale-[1.01] active:scale-[0.99] transition-all py-5 rounded-xl shadow-[0_10px_30px_rgba(16,183,127,0.2)] group relative overflow-hidden">
+                        <div class="relative z-10 flex items-center justify-center gap-3 text-background-dark font-black text-xl uppercase tracking-tighter">
+                            <span class="material-symbols-outlined font-bold text-2xl group-hover:rotate-12 transition-transform">bolt</span>
+                            Generate Video
+                        </div>
+                        <div class="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </button>
+                    <p class="text-center text-slate-600 text-[10px] mt-4 font-bold uppercase tracking-widest">Supports YouTube, Twitch, local files, HLS streams</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Help Modal (Needs Tailwind styling over plain css) -->
+<div id="helpModal" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-surface-dark border border-white/10 rounded-2xl max-w-xl w-full p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-white">How to Use HugeGull</h2>
+            <button class="close-modal text-slate-400 hover:text-white transition-colors" onclick="document.getElementById('helpModal').style.display='none'"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="space-y-6 text-slate-300 text-sm">
+            <div>
+                <h3 class="text-primary font-bold uppercase tracking-widest text-xs mb-2">Basic Usage</h3>
+                <ol class="list-decimal list-inside space-y-1 ml-2">
+                    <li>Paste a video URL (YouTube, Twitch, or direct stream)</li>
+                    <li>Select a Quick Preset</li>
+                    <li>Click "Generate Video"</li>
+                    <li>Wait for processing and download your compilation</li>
+                </ol>
+            </div>
+            <div>
+                <h3 class="text-primary font-bold uppercase tracking-widest text-xs mb-2">Presets</h3>
+                <ul class="list-disc list-inside space-y-1 ml-2">
+                    <li><strong class="text-white">YouTube:</strong> 16:9 aspect ratio, 45 seconds</li>
+                    <li><strong class="text-white">TikTok/Shorts:</strong> 9:16 vertical, 30 seconds</li>
+                    <li><strong class="text-white">Instagram:</strong> 1:1 square, 30 seconds</li>
+                </ul>
+            </div>
+        </div>
+        <button class="w-full mt-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-lg transition-colors border border-white/5" onclick="document.getElementById('helpModal').style.display='none'">Got it</button>
+    </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
