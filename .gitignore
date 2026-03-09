@@ -4,3 +4,4 @@ render/*
 *.pyc
 hugegull.egg-info/*
 build/*hugegull_web.egg-info/*
+build/
