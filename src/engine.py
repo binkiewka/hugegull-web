@@ -6,10 +6,9 @@ import subprocess
 import json
 import shutil
 import concurrent.futures
-import hashlib
 import time
 from typing import Any
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 
 from config import config
 from utils import utils
@@ -21,7 +20,6 @@ class ClipSection:
     start: float
     duration: float
     source: dict[str, Any]
-    scene_score: float = 0.0
     index: int = 0
 
 
@@ -168,10 +166,7 @@ class Engine:
 
         # Generate clip plan
         if not self.clip_sections:
-            if config.scene_detection:
-                self.clip_sections = self.generate_scene_based_sections()
-            else:
-                self.clip_sections = self.generate_random_sections()
+            self.clip_sections = self.generate_random_sections()
             
             self.total_clips = len(self.clip_sections)
             self.save_state()
@@ -190,9 +185,6 @@ class Engine:
         # Reorder clips if shuffle enabled
         if config.shuffle_clips:
             random.shuffle(self.clips)
-        elif config.sort_by == "scene_score" and config.scene_detection:
-            # Sort by scene change intensity (most dynamic first)
-            self.clips.sort(key=lambda x: self.get_clip_score(x), reverse=True)
         
         return self.concatenate_clips()
 
@@ -600,8 +592,6 @@ class Engine:
         # Shuffle clips within each source so it's not strictly chronological internally unless sorted later
         for src_key in clips_by_source:
              random.shuffle(clips_by_source[src_key])
-             # Alternatively, could sort by scene_score descending to get the best scenes from each source first
-             # clips_by_source[src_key].sort(key=lambda x: x["scene_score"], reverse=True)
              
         # 3. Round-robin pick clips from sources until duration is met
         source_keys = list(clips_by_source.keys())
@@ -629,7 +619,6 @@ class Engine:
                 start=clip["start"],
                 duration=clip["duration"],
                 source=clip["source"],
-                scene_score=clip["scene_score"],
                 index=len(sections)
             ))
             
@@ -688,10 +677,8 @@ class Engine:
         total_duration = 0.0
         for i, section in enumerate(self.clip_sections, 1):
             source_url = section.source.get("url", "unknown")[:50]
-            scene_info = f" (scene score: {section.scene_score:.2f})" if config.scene_detection else ""
-            
             self.log(f"Clip {i}/{len(self.clip_sections)}: {section.start:.1f}s - {section.start + section.duration:.1f}s "
-                      f"(duration: {section.duration:.1f}s){scene_info}")
+                      f"(duration: {section.duration:.1f}s)")
             self.log(f"  Source: {source_url}...")
             total_duration += section.duration
         
@@ -713,7 +700,6 @@ class Engine:
                     "start": s.start,
                     "duration": s.duration,
                     "source_index": self.sources.index(s.source) if s.source in self.sources else 0,
-                    "scene_score": s.scene_score,
                     "index": s.index,
                 }
                 for s in self.clip_sections
@@ -754,7 +740,6 @@ class Engine:
                         start=s["start"],
                         duration=s["duration"],
                         source=self.sources[source_idx],
-                        scene_score=s.get("scene_score", 0.0),
                         index=s["index"]
                     ))
             
@@ -764,15 +749,6 @@ class Engine:
             self.error(f"Failed to load state: {e}")
             return False
 
-    def get_clip_score(self, clip_path: str) -> float:
-        """Get scene score for a clip from its filename"""
-        try:
-            index = int(os.path.basename(clip_path).split("_")[2].split(".")[0]) - 1
-            if 0 <= index < len(self.clip_sections):
-                return self.clip_sections[index].scene_score
-        except (IndexError, ValueError):
-            pass
-        return 0.0
 
     def generate_clips_from_sections(self) -> None:
         """Extract clips from planned sections with progress tracking"""

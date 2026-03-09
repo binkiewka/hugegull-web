@@ -210,24 +210,6 @@
             <div class="space-y-6">
                 <!-- Global Logic -->
                 <section class="glass-panel p-6 rounded-xl space-y-4">
-                    <div class="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20 cursor-pointer" onclick="document.getElementById('sceneDetection').click()">
-                        <div class="flex items-center gap-3">
-                            <span class="material-symbols-outlined text-primary">content_cut</span>
-                            <span class="text-sm font-bold text-white">Scene Detection</span>
-                        </div>
-                        <input type="checkbox" id="sceneDetection" class="w-5 h-5 rounded border-white/20 bg-black/40 text-primary focus:ring-primary focus:ring-offset-background-dark" />
-                    </div>
-
-                    <div class="space-y-4 pt-2">
-                        <div>
-                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="sortBy">Clip Ordering</label>
-                            <select id="sortBy" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300 focus:ring-0">
-                                <option value="index">Original Order</option>
-                                <option value="scene_score">Most Dynamic First</option>
-                                <option value="random">Random Shuffle</option>
-                            </select>
-                        </div>
-
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro (SEC)</label>
@@ -352,14 +334,10 @@
                 <h3 class="text-primary font-bold uppercase tracking-widest text-xs mb-2">Basic Usage</h3>
                 <ol class="list-decimal list-inside space-y-1 ml-2">
                     <li>Paste a video URL (YouTube, Twitch, or direct stream)</li>
-                    <li>Toggle Scene Detection and select a Quick Preset</li>
+                    <li>Select a Quick Preset</li>
                     <li>Click "Generate Video"</li>
                     <li>Wait for processing and download your compilation</li>
                 </ol>
-            </div>
-            <div>
-                <h3 class="text-primary font-bold uppercase tracking-widest text-xs mb-2">Scene Detection</h3>
-                <p>Enable "Scene Detection" for smarter cuts. Instead of random timestamps, HugeGull parses structural scene changes in the video for superior timing and dynamics.</p>
             </div>
             <div>
                 <h3 class="text-primary font-bold uppercase tracking-widest text-xs mb-2">Presets</h3>

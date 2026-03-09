@@ -78,16 +78,6 @@ class HugeGullUI {
             btn.addEventListener('click', (e) => this.applyPreset(e.target.dataset.preset));
         });
 
-        // Scene detection toggle affects sort options
-        document.getElementById('sceneDetection').addEventListener('change', (e) => {
-            const sortBy = document.getElementById('sortBy');
-            const sceneScoreOption = sortBy.querySelector('option[value="scene_score"]');
-            sceneScoreOption.disabled = !e.target.checked;
-            if (!e.target.checked && sortBy.value === 'scene_score') {
-                sortBy.value = 'index';
-            }
-        });
-
         // Add URL button
         document.getElementById('addUrlBtn').addEventListener('click', () => this.addUrlInput());
 
@@ -251,11 +241,6 @@ class HugeGullUI {
         document.getElementById('skipStart').value = preset.skip_start || 0;
         document.getElementById('skipEnd').value = preset.skip_end || 0;
         
-        const sceneToggle = document.getElementById('sceneDetection');
-        sceneToggle.checked = preset.scene_detection;
-        // Trigger generic change event to update sort dropdown visibility
-        sceneToggle.dispatchEvent(new Event('change'));
-        
         const sortSelect = document.getElementById('sortBy');
         sortSelect.value = preset.sort_by || 'index';
 
@@ -299,7 +284,6 @@ class HugeGullUI {
             output_format: document.getElementById('outputFormat').value || 'mp4',
             skip_start: parseFloat(document.getElementById('skipStart').value) || 0,
             skip_end: parseFloat(document.getElementById('skipEnd').value) || 0,
-            scene_detection: document.getElementById('sceneDetection').checked,
             sort_by: document.getElementById('sortBy').value || 'index',
             shuffle_clips: document.getElementById('sortBy').value === 'random',
         };

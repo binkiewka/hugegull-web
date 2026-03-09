@@ -28,15 +28,13 @@ class Config:
         self.config = ""
         
         # New feature flags
-        self.scene_detection = False
-        self.scene_threshold = 0.3
         self.preview = False
         self.dry_run = False
         self.skip_start = 0.0
         self.skip_end = 0.0
         self.resume = False
         self.shuffle_clips = False
-        self.sort_by = "index"  # "index", "scene_score", "random"
+        self.sort_by = "index"  # "index", "random"
         self.aspect_ratio = ""  # "16:9", "9:16", "1:1", "4:5", or "" for original
         self.output_format = "mp4"  # "mp4", "webm", "mov"
 
@@ -106,7 +104,6 @@ class Config:
     def read_args(self) -> None:
         # Boolean flags
         self.read_flag("open", "open")
-        self.read_flag("scene-detection", "scene_detection")
         self.read_flag("preview", "preview")
         self.read_flag("dry-run", "dry_run")
         self.read_flag("resume", "resume")
@@ -134,14 +131,6 @@ class Config:
         if "--sort-by" in sys.argv:
             self.get_arg("sort-by", "sort_by")
 
-        # Float arguments
-        if "--scene-threshold" in sys.argv:
-            arg_idx = sys.argv.index("--scene-threshold")
-            if arg_idx + 1 < len(sys.argv):
-                self.scene_threshold = float(sys.argv[arg_idx + 1])
-                sys.argv.pop(arg_idx + 1)
-                sys.argv.pop(arg_idx)
-                
         if "--skip-start" in sys.argv:
             arg_idx = sys.argv.index("--skip-start")
             if arg_idx + 1 < len(sys.argv):
@@ -190,10 +179,6 @@ class Config:
             self.min_clip_duration = float(config_data["min_clip_duration"])
             
         # New feature settings
-        if "scene_detection" in config_data:
-            self.scene_detection = bool(config_data["scene_detection"])
-        if "scene_threshold" in config_data:
-            self.scene_threshold = float(config_data["scene_threshold"])
         if "skip_start" in config_data:
             self.skip_start = float(config_data["skip_start"])
         if "skip_end" in config_data:

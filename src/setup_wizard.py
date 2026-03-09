@@ -233,7 +233,6 @@ def run_setup() -> None:
     # Step 5: Advanced options
     print_step(5, 5, "Advanced options")
     
-    enable_scene_detection = ask_yes_no("Enable scene detection by default?", False)
     skip_start = ask_number("Skip first N seconds (for intros)", 0, 0, 300)
     skip_end = ask_number("Skip last N seconds (for outros)", 0, 0, 300)
     
@@ -254,10 +253,6 @@ gpu = "{gpu}"
 min_clip_duration = 3.0
 avg_clip_duration = 6.0
 max_clip_duration = 9.0
-
-# Scene detection
-scene_detection = {str(enable_scene_detection).lower()}
-scene_threshold = 0.3
 
 # Skip intros/outros (seconds)
 skip_start = {skip_start}

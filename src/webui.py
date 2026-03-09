@@ -7,7 +7,6 @@ import json
 import uuid
 from datetime import datetime
 from typing import Any
-from dataclasses import dataclass, field, asdict
 
 # Add src to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -134,10 +133,6 @@ def configure_job_config(urls: list, name: str, settings: dict) -> None:
     cfg.gpu = settings.get("gpu", "")
     cfg.fade = float(settings.get("fade", 0.03))
     
-    # New features
-    cfg.scene_detection = settings.get("scene_detection", False)
-    cfg.scene_threshold = float(settings.get("scene_threshold", 0.3))
-    cfg.skip_start = float(settings.get("skip_start", 0))
     cfg.skip_end = float(settings.get("skip_end", 0))
     cfg.resume = settings.get("resume", False)
     cfg.shuffle_clips = settings.get("shuffle_clips", False)
