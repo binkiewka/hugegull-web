@@ -210,18 +210,25 @@
             <div class="space-y-6">
                 <!-- Global Logic -->
                 <section class="glass-panel p-6 rounded-xl space-y-4">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro (SEC)</label>
-                                <div class="relative">
-                                    <input id="skipStart" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
-                                </div>
+                    <div>
+                        <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="sortBy">Clip Ordering</label>
+                        <select id="sortBy" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm text-slate-300 focus:ring-0">
+                            <option value="index">Original Order</option>
+                            <option value="random">Random Shuffle</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipStart">Skip Intro (SEC)</label>
+                            <div class="relative">
+                                <input id="skipStart" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
                             </div>
-                            <div>
-                                <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipEnd">Skip Outro (SEC)</label>
-                                <div class="relative">
-                                    <input id="skipEnd" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
-                                </div>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1" for="skipEnd">Skip Outro (SEC)</label>
+                            <div class="relative">
+                                <input id="skipEnd" class="w-full bg-black/40 border border-white/10 rounded-lg h-10 px-3 text-sm focus:ring-1 focus:ring-primary/40 transition-all focus:border-white/10" type="number" value="0" min="0" />
                             </div>
                         </div>
                     </div>
