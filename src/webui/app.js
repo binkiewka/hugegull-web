@@ -522,7 +522,8 @@ class HugeGullUI {
         this.clearUrls();
         document.getElementById('name').value = '';
         document.getElementById('logOutput').innerHTML = '';
-        document.getElementById('clipsList').innerHTML = '';
+        const clipsList = document.getElementById('clipsList');
+        if (clipsList) clipsList.innerHTML = '';
         this.updateProgress(0);
         document.getElementById('progressText').textContent = 'Clip 0 of 0';
         document.getElementById('progressPercent').textContent = '0%';
